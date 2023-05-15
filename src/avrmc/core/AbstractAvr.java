@@ -784,12 +784,32 @@ public class AbstractAvr implements Cloneable {
   private @Nullable AbstractAvr execute(AvrInstruction.BREQ insn) {
     AbstractAvr fork = null;
     //
-    if (this.zeroFlag == TRUE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
+    
+
+    // Identify if the outcome is known or unknown
+    if (this.zeroFlag == UNKNOWN) {
+      // Split & Concretize. If outcome is unknown, fork the state and concretize
+      // the zero flag as TRUE on one fork and FALSE on the other.
+      fork = (AbstractAvr) this.clone();
+
+
+      // In the fork, we assume the zeroFlag is TRUE.
+      fork.zeroFlag = TRUE;
+      fork.programCounter = fork.programCounter + insn.k + 1;
+
+      // In the original state, we assume the zeroFlag is FALSE.
+      this.zeroFlag = FALSE;
       this.programCounter = this.programCounter + 1;
+    } else {
+      // If outcome is known, execute as normal
+      if (this.zeroFlag == TRUE) {
+        this.programCounter = this.programCounter + insn.k + 1;
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
     }
-    //
+
+    // Execute both forks as we have known values in both cases.
     return fork;
   }
 
@@ -2270,25 +2290,40 @@ public class AbstractAvr implements Cloneable {
   /**
    * This instruction tests a single bit in an I/O register and skips the next
    * instruction if the bit is cleared. This instruction operates on the lower 32
-   * I/O registers â€“ addresses 0-31.
+   * I/O registers – addresses 0-31.
    *
    * @param insn Instruction being executed
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
-  private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
-    this.programCounter = this.programCounter + 1;
-    Byte io = this.data.read(insn.A + 32);
-    Bit iob = io.get(insn.b);
-    AbstractAvr fork = null;
-    AvrInstruction following = decode(this.programCounter);
-    int pc = this.programCounter + following.getWidth();
-    //
+private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
+  this.programCounter = this.programCounter + 1;
+  Byte io = this.data.read(insn.A + 32);
+  Bit iob = io.get(insn.b);
+  AbstractAvr fork = null;
+  AvrInstruction following = decode(this.programCounter);
+  int pc = this.programCounter + following.getWidth();
+
+  // Identify if the outcome is known or unknown.
+  if(iob == UNKNOWN) {
+    // In the case of an unknown outcome, fork the current state.
+    fork = this.clone();
+
+    // In the fork, we assume the bit is FALSE and the next instruction is skipped.
+    fork.data.write(insn.A + 32, io.set(insn.b, TRUE));
+    fork.programCounter = pc;
+
+    // In the original state, we assume the bit is TRUE and the next instruction is not skipped.
+    this.data.write(insn.A + 32, io.set(insn.b, FALSE));
+  } else {
+    // If outcome is known, execute as normal
     if (iob == FALSE) {
       this.programCounter = pc;
     }
-    //
-    return fork;
   }
+  // Execute both forks as we have known values in both cases.
+  return fork;
+}
+
 
   /**
    * This instruction tests a single bit in an I/O register and skips the next
@@ -2306,10 +2341,22 @@ public class AbstractAvr implements Cloneable {
     AvrInstruction following = decode(this.programCounter);
     int pc = this.programCounter + following.getWidth();
     //
-    if (iob == TRUE) {
-      this.programCounter = pc;
+    
+    if(iob == UNKNOWN) {
+    	fork = this.clone();
+    	fork.data.write(insn.A + 32, io.set(insn.b, TRUE));
+    	fork.programCounter = this.getProgramCounter();
+    	
+    	this.data.write(insn.A + 32, io.set(insn.b, FALSE));
+        this.programCounter = this.programCounter + following.getWidth();
+
+    } else {
+        // If outcome is known, execute as normal
+	    if (iob == TRUE) {
+	      this.programCounter = pc;
+	    }
     }
-    //
+    // Execute both forks as we have known values in both cases.
     return fork;
   }
 
@@ -2341,6 +2388,19 @@ public class AbstractAvr implements Cloneable {
     return null;
   }
 
+//  /**
+//   * Sets specified bits in register rd. Performs the logical ORI between the
+//   * contents of register rd and a constant mask K, and places the result in the
+//   * destination register rd.
+//   *
+//   * @param insn Instruction being executed
+//   * @return Forked AVR state or <code>null</code> (if no fork).
+//   */
+//  private @Nullable AbstractAvr execute(AvrInstruction.SBR insn) {
+//    // TODO
+//    throw new IllegalArgumentException("IMPLEMENT ME");
+//  }
+  
   /**
    * Sets specified bits in register rd. Performs the logical ORI between the
    * contents of register rd and a constant mask K, and places the result in the
@@ -2350,9 +2410,22 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.SBR insn) {
-    // TODO
-    throw new IllegalArgumentException("IMPLEMENT ME");
+    this.programCounter = this.programCounter + 1;
+    Byte rd = this.data.read(insn.Rd);
+    // Perform operation
+    Byte r = rd.or(Byte.from((byte) insn.K));
+
+    // Update register
+    this.data.write(insn.Rd, r);
+    // Set Flags
+    this.zeroFlag = r.isZero();
+    this.negativeFlag = r.get(7); // assuming 8-bit registers
+    this.overflowFlag = FALSE;
+    this.signFlag = xor(this.negativeFlag, this.overflowFlag);
+    //
+    return null;
   }
+
 
   /**
    * This instruction tests a single bit in a register and skips the next
@@ -2368,11 +2441,26 @@ public class AbstractAvr implements Cloneable {
     AbstractAvr fork = null;
     AvrInstruction following = decode(this.programCounter);
     int pc = this.programCounter + following.getWidth();
-    //
-    if (rdb == FALSE) {
-      this.programCounter = pc;
+    // Identify if the outcome is known or unknown
+    if (rdb == UNKNOWN) {
+      // Split & Concretize. If outcome is unknown, fork the state and concretize
+      // the bit as TRUE on one fork and FALSE on the other.
+
+      fork = this.clone();
+      // In the fork, we assume the bit is TRUE and the next instruction is skipped.
+      fork.data.write(insn.Rd, rd.set(insn.b, TRUE));
+      fork.programCounter = pc;
+
+      // In the original state, we assume the bit is FALSE and the next instruction is not skipped.
+      this.data.write(insn.Rd, rd.set(insn.b, FALSE));
+    } else {
+      // If outcome is known, execute as normal
+      if (rdb == TRUE) {
+        this.programCounter = pc;
+      }
     }
-    //
+
+    // Execute both forks as we have known values in both cases.
     return fork;
   }
 
@@ -2390,13 +2478,30 @@ public class AbstractAvr implements Cloneable {
     AbstractAvr fork = null;
     AvrInstruction following = decode(this.programCounter);
     int pc = this.programCounter + following.getWidth();
-    //
-    if (rdb == TRUE) {
-      this.programCounter = pc;
+
+    // Identify if the outcome is known or unknown
+    if (rdb == UNKNOWN) {
+      // Split & Concretize. If outcome is unknown, fork the state and concretize
+      // the bit as TRUE on one fork and FALSE on the other.
+
+      fork = this.clone();
+      // In the fork, we assume the bit is TRUE and the next instruction is skipped.
+      fork.data.write(insn.Rd, rd.set(insn.b, TRUE));
+      fork.programCounter = pc;
+
+      // In the original state, we assume the bit is FALSE and the next instruction is not skipped.
+      this.data.write(insn.Rd, rd.set(insn.b, FALSE));
+    } else {
+      // If outcome is known, execute as normal
+      if (rdb == TRUE) {
+        this.programCounter = pc;
+      }
     }
-    //
+
+    // Execute both forks as we have known values in both cases.
     return fork;
   }
+
 
   /**
    * Sets the Carry Flag (C) in SREG (Status register).
