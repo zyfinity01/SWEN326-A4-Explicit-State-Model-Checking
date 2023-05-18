@@ -3163,14 +3163,17 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
    * @return Logical AND of bits.
    */
   private static Bit and(Bit... bits) {
-    for (int i = 0; i != bits.length; ++i) {
-      Bit ith = bits[i];
-      if (ith == FALSE) {
-        return FALSE;
-      }
-    }
-    return TRUE;
-  }
+	  boolean hasUnknown = false;
+	  for (Bit ith : bits) {
+	    if (ith == FALSE) {
+	      return FALSE;
+	    }
+	    if (ith == UNKNOWN) {
+	      hasUnknown = true;
+	    }
+	  }
+	  return hasUnknown ? UNKNOWN : TRUE;
+	}
 
   /**
    * Logical OR of one or more bits. Since each bit may be unknown, the outcome
@@ -3182,14 +3185,17 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
    * @return Logical OR of bits.
    */
   private static Bit or(Bit... bits) {
-    for (int i = 0; i != bits.length; ++i) {
-      Bit ith = bits[i];
-      if (ith == TRUE) {
-        return TRUE;
-      }
-    }
-    return FALSE;
-  }
+	  boolean hasUnknown = false;
+	  for (Bit ith : bits) {
+	    if (ith == TRUE) {
+	      return TRUE;
+	    }
+	    if (ith == UNKNOWN) {
+	      hasUnknown = true;
+	    }
+	  }
+	  return hasUnknown ? UNKNOWN : FALSE;
+	}
 
   /**
    * Logical XOR of a single bit. Since the argument bits may be unknown, the
@@ -3201,6 +3207,7 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
    * @return XOR of bits.
    */
   private static Bit xor(Bit lhs, Bit rhs) {
+	if(lhs == UNKNOWN || rhs == UNKNOWN) return UNKNOWN;
     if (lhs == rhs) {
       return FALSE;
     }
@@ -3216,6 +3223,7 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
    * @return False if True (and vice versa), otherwise unknown.
    */
   private static Bit not(Bit b) {
+	if(b == UNKNOWN) return UNKNOWN;
     if (b == FALSE) {
       return TRUE;
     }
