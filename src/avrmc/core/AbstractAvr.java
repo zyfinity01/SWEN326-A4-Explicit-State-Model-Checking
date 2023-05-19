@@ -734,17 +734,32 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRBC insn) {
-    AbstractAvr fork = null;
-    Bit bit = getStatusBit(insn.s);
-    //
-    if (bit == FALSE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    Bit bit = getStatusBit(insn.s);
+	    AbstractAvr fork = null;
+
+	    // Identify if the outcome is known or unknown
+	    if(bit == UNKNOWN) {
+	        // Split & Concretize. If the outcome is unknown, fork the current state
+	        fork = this.clone();
+
+	        // On the fork, we assume the bit is TRUE and the next instruction is not skipped
+	        fork.setStatusBit(insn.s, TRUE);
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // In the original state, we assume the bit is FALSE and the next instruction is skipped
+	        setStatusBit(insn.s, FALSE);
+	        this.programCounter = (this.programCounter + insn.k + 1);
+	    } else {
+	        // If outcome is known, execute as normal
+	        if (bit == FALSE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	    }
+	    // Execute both forks as we have known values in both cases.
+	    return fork;
+	}
 
   /**
    * Conditional relative branch. Tests a single bit in SREG and branches
@@ -756,17 +771,32 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRBS insn) {
-    AbstractAvr fork = null;
-    Bit bit = getStatusBit(insn.s);
-    //
-    if (bit == TRUE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    Bit bit = getStatusBit(insn.s);
+	    AbstractAvr fork = null;
+
+	    // Identify if the outcome is known or unknown
+	    if(bit == UNKNOWN) {
+	        // Split & Concretize. If the outcome is unknown, fork the current state
+	        fork = this.clone();
+
+	        // On the fork, we assume the bit is FALSE and the next instruction is not skipped
+	        fork.setStatusBit(insn.s, FALSE);
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // In the original state, we assume the bit is TRUE and the next instruction is skipped
+	        setStatusBit(insn.s, TRUE);
+	        this.programCounter = (this.programCounter + insn.k + 1);
+	    } else {
+	        // If outcome is known, execute as normal
+	        if (bit == TRUE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	    }
+	    // Execute both forks as we have known values in both cases.
+	    return fork;
+	}
 
   /**
    * Conditional relative branch. Tests the Zero Flag (Z) and branches relatively
@@ -827,16 +857,32 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRGE insn) {
-    AbstractAvr fork = null;
-    //
-    if (this.signFlag == FALSE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    if (this.signFlag != UNKNOWN) {
+	        // The outcome is known.
+	        if (this.signFlag == FALSE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	        return null; // No fork created.
+	    } else {
+	        // The outcome is unknown. We have a choice point.
+	        // Fork the state.
+	        AbstractAvr fork = this.clone();
+
+	        // In the original state, concretize the sign flag as FALSE.
+	        this.signFlag = FALSE;
+	        this.programCounter = (this.programCounter + insn.k + 1);
+
+	        // In the forked state, concretize the sign flag as TRUE.
+	        fork.signFlag = TRUE;
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // Return the forked state.
+	        return fork;
+	    }
+	}
+
 
   /**
    * Conditional relative branch. Tests the Half Carry Flag (H) and branches
@@ -849,16 +895,31 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRHC insn) {
-    AbstractAvr fork = null;
-    //
-    if (this.halfCarryFlag == FALSE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    if (this.halfCarryFlag != UNKNOWN) {
+	        // The outcome is known.
+	        if (this.halfCarryFlag == FALSE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	        return null; // No fork created.
+	    } else {
+	        // The outcome is unknown. We have a choice point.
+	        // Fork the state.
+	        AbstractAvr fork = this.clone();
+
+	        // In the original state, concretize the halfCarryFlag as FALSE.
+	        this.halfCarryFlag = FALSE;
+	        this.programCounter = (this.programCounter + insn.k + 1);
+
+	        // In the forked state, concretize the halfCarryFlag as TRUE.
+	        fork.halfCarryFlag = TRUE;
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // Return the forked state.
+	        return fork;
+	    }
+	}
 
   /**
    * Conditional relative branch. Tests the Half Carry Flag (H) and branches
@@ -871,16 +932,32 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRHS insn) {
-    AbstractAvr fork = null;
-    //
-    if (this.halfCarryFlag == TRUE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    if (this.halfCarryFlag != UNKNOWN) {
+	        // The outcome is known.
+	        if (this.halfCarryFlag == TRUE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	        return null; // No fork created.
+	    } else {
+	        // The outcome is unknown. We have a choice point.
+	        // Fork the state.
+	        AbstractAvr fork = this.clone();
+
+	        // In the original state, concretize the halfCarryFlag as TRUE.
+	        this.halfCarryFlag = TRUE;
+	        this.programCounter = (this.programCounter + insn.k + 1);
+
+	        // In the forked state, concretize the halfCarryFlag as FALSE.
+	        fork.halfCarryFlag = FALSE;
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // Return the forked state.
+	        return fork;
+	    }
+	}
+
 
   /**
    * Conditional relative branch. Tests the Global Interrupt Flag (I) and branches
@@ -893,16 +970,32 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRID insn) {
-    AbstractAvr fork = null;
-    //
-    if (this.interruptFlag == FALSE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    if (this.interruptFlag != UNKNOWN) {
+	        // The outcome is known.
+	        if (this.interruptFlag == FALSE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	        return null; // No fork created.
+	    } else {
+	        // The outcome is unknown. We have a choice point.
+	        // Fork the state.
+	        AbstractAvr fork = this.clone();
+
+	        // In the original state, concretize the interruptFlag as FALSE.
+	        this.interruptFlag = FALSE;
+	        this.programCounter = (this.programCounter + insn.k + 1);
+
+	        // In the forked state, concretize the interruptFlag as TRUE.
+	        fork.interruptFlag = TRUE;
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // Return the forked state.
+	        return fork;
+	    }
+	}
+
 
   /**
    * Conditional relative branch. Tests the Global Interrupt Flag (I) and branches
@@ -915,16 +1008,32 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRIE insn) {
-    AbstractAvr fork = null;
-    //
-    if (this.interruptFlag == TRUE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    if (this.interruptFlag != UNKNOWN) {
+	        // The outcome is known.
+	        if (this.interruptFlag == TRUE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	        return null; // No fork created.
+	    } else {
+	        // The outcome is unknown. We have a choice point.
+	        // Fork the state.
+	        AbstractAvr fork = this.clone();
+
+	        // In the original state, concretize the interruptFlag as TRUE.
+	        this.interruptFlag = TRUE;
+	        this.programCounter = (this.programCounter + insn.k + 1);
+
+	        // In the forked state, concretize the interruptFlag as FALSE.
+	        fork.interruptFlag = FALSE;
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // Return the forked state.
+	        return fork;
+	    }
+	}
+
 
   /**
    * Conditional relative branch. Tests the Carry Flag (C) and branches relatively
@@ -940,16 +1049,32 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRLO insn) {
-    AbstractAvr fork = null;
-    //
-    if (this.carryFlag == TRUE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    if (this.carryFlag != UNKNOWN) {
+	        // The outcome is known.
+	        if (this.carryFlag == TRUE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	        return null; // No fork created.
+	    } else {
+	        // The outcome is unknown. We have a choice point.
+	        // Fork the state.
+	        AbstractAvr fork = this.clone();
+
+	        // In the original state, concretize the carryFlag as TRUE.
+	        this.carryFlag = TRUE;
+	        this.programCounter = (this.programCounter + insn.k + 1);
+
+	        // In the forked state, concretize the carryFlag as FALSE.
+	        fork.carryFlag = FALSE;
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // Return the forked state.
+	        return fork;
+	    }
+	}
+
 
   /**
    * Conditional relative branch. Tests the Signed Flag (S) and branches
@@ -965,16 +1090,32 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRLT insn) {
-    AbstractAvr fork = null;
-    //
-    if (this.signFlag == TRUE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    if (this.signFlag != UNKNOWN) {
+	        // The outcome is known.
+	        if (this.signFlag == TRUE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	        return null; // No fork created.
+	    } else {
+	        // The outcome is unknown. We have a choice point.
+	        // Fork the state.
+	        AbstractAvr fork = this.clone();
+
+	        // In the original state, concretize the signFlag as TRUE.
+	        this.signFlag = TRUE;
+	        this.programCounter = (this.programCounter + insn.k + 1);
+
+	        // In the forked state, concretize the signFlag as FALSE.
+	        fork.signFlag = FALSE;
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // Return the forked state.
+	        return fork;
+	    }
+	}
+
 
   /**
    * Conditional relative branch. Tests the Negative Flag (N) and branches
@@ -987,16 +1128,32 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRMI insn) {
-    AbstractAvr fork = null;
-    //
-    if (this.negativeFlag == TRUE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    if (this.negativeFlag != UNKNOWN) {
+	        // The outcome is known.
+	        if (this.negativeFlag == TRUE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	        return null; // No fork created.
+	    } else {
+	        // The outcome is unknown. We have a choice point.
+	        // Fork the state.
+	        AbstractAvr fork = this.clone();
+
+	        // In the original state, concretize the negativeFlag as TRUE.
+	        this.negativeFlag = TRUE;
+	        this.programCounter = (this.programCounter + insn.k + 1);
+
+	        // In the forked state, concretize the negativeFlag as FALSE.
+	        fork.negativeFlag = FALSE;
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // Return the forked state.
+	        return fork;
+	    }
+	}
+
 
   /**
    * Conditional relative branch. Tests the Zero Flag (Z) and branches relatively
@@ -1012,16 +1169,32 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRNE insn) {
-    AbstractAvr fork = null;
-    //
-    if (this.zeroFlag == FALSE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    if (this.zeroFlag != UNKNOWN) {
+	        // The outcome is known.
+	        if (this.zeroFlag == FALSE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	        return null; // No fork created.
+	    } else {
+	        // The outcome is unknown. We have a choice point.
+	        // Fork the state.
+	        AbstractAvr fork = this.clone();
+
+	        // In the original state, concretize the zeroFlag as FALSE.
+	        this.zeroFlag = FALSE;
+	        this.programCounter = (this.programCounter + insn.k + 1);
+
+	        // In the forked state, concretize the zeroFlag as TRUE.
+	        fork.zeroFlag = TRUE;
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // Return the forked state.
+	        return fork;
+	    }
+	}
+
 
   /**
    * Conditional relative branch. Tests the Negative Flag (N) and branches
@@ -1034,16 +1207,32 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRPL insn) {
-    AbstractAvr fork = null;
-    //
-    if (this.negativeFlag == FALSE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    if (this.negativeFlag != UNKNOWN) {
+	        // The outcome is known.
+	        if (this.negativeFlag == FALSE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	        return null; // No fork created.
+	    } else {
+	        // The outcome is unknown. We have a choice point.
+	        // Fork the state.
+	        AbstractAvr fork = this.clone();
+
+	        // In the original state, concretize the negativeFlag as FALSE.
+	        this.negativeFlag = FALSE;
+	        this.programCounter = (this.programCounter + insn.k + 1);
+
+	        // In the forked state, concretize the negativeFlag as TRUE.
+	        fork.negativeFlag = TRUE;
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // Return the forked state.
+	        return fork;
+	    }
+	}
+
 
   /**
    * Conditional relative branch. Tests the Carry Flag (C) and branches relatively
@@ -1059,16 +1248,32 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRSH insn) {
-    AbstractAvr fork = null;
-    //
-    if (this.carryFlag == FALSE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    if (this.carryFlag != UNKNOWN) {
+	        // The outcome is known.
+	        if (this.carryFlag == FALSE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	        return null; // No fork created.
+	    } else {
+	        // The outcome is unknown. We have a choice point.
+	        // Fork the state.
+	        AbstractAvr fork = this.clone();
+
+	        // In the original state, concretize the carryFlag as FALSE.
+	        this.carryFlag = FALSE;
+	        this.programCounter = (this.programCounter + insn.k + 1);
+
+	        // In the forked state, concretize the carryFlag as TRUE.
+	        fork.carryFlag = TRUE;
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // Return the forked state.
+	        return fork;
+	    }
+	}
+
 
   /**
    * Conditional relative branch. Tests the T Flag and branches relatively to PC
@@ -1081,16 +1286,32 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRTC insn) {
-    AbstractAvr fork = null;
-    //
-    if (this.bitcopyFlag == FALSE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    if (this.bitcopyFlag != UNKNOWN) {
+	        // The outcome is known.
+	        if (this.bitcopyFlag == FALSE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	        return null; // No fork created.
+	    } else {
+	        // The outcome is unknown. We have a choice point.
+	        // Fork the state.
+	        AbstractAvr fork = this.clone();
+
+	        // In the original state, concretize the bitcopyFlag as FALSE.
+	        this.bitcopyFlag = FALSE;
+	        this.programCounter = (this.programCounter + insn.k + 1);
+
+	        // In the forked state, concretize the bitcopyFlag as TRUE.
+	        fork.bitcopyFlag = TRUE;
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // Return the forked state.
+	        return fork;
+	    }
+	}
+
 
   /**
    * Conditional relative branch. Tests the T Flag and branches relatively to PC
@@ -1102,16 +1323,32 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRTS insn) {
-    AbstractAvr fork = null;
-    //
-    if (this.bitcopyFlag == TRUE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    if (this.bitcopyFlag != UNKNOWN) {
+	        // The outcome is known.
+	        if (this.bitcopyFlag == TRUE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	        return null; // No fork created.
+	    } else {
+	        // The outcome is unknown. We have a choice point.
+	        // Fork the state.
+	        AbstractAvr fork = this.clone();
+
+	        // In the original state, concretize the bitcopyFlag as TRUE.
+	        this.bitcopyFlag = TRUE;
+	        this.programCounter = (this.programCounter + insn.k + 1);
+
+	        // In the forked state, concretize the bitcopyFlag as FALSE.
+	        fork.bitcopyFlag = FALSE;
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // Return the forked state.
+	        return fork;
+	    }
+	}
+
 
   /**
    * Conditional relative branch. Tests the Overflow Flag (V) and branches
@@ -1124,16 +1361,32 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRVC insn) {
-    AbstractAvr fork = null;
-    //
-    if (this.overflowFlag == FALSE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    if (this.overflowFlag != UNKNOWN) {
+	        // The outcome is known.
+	        if (this.overflowFlag == FALSE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	        return null; // No fork created.
+	    } else {
+	        // The outcome is unknown. We have a choice point.
+	        // Fork the state.
+	        AbstractAvr fork = this.clone();
+
+	        // In the original state, concretize the overflowFlag as FALSE.
+	        this.overflowFlag = FALSE;
+	        this.programCounter = (this.programCounter + insn.k + 1);
+
+	        // In the forked state, concretize the overflowFlag as TRUE.
+	        fork.overflowFlag = TRUE;
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // Return the forked state.
+	        return fork;
+	    }
+	}
+
 
   /**
    * Conditional relative branch. Tests the Overflow Flag (V) and branches
@@ -1146,16 +1399,32 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRVS insn) {
-    AbstractAvr fork = null;
-    //
-    if (this.overflowFlag == TRUE) {
-      this.programCounter = (this.programCounter + insn.k + 1);
-    } else {
-      this.programCounter = this.programCounter + 1;
-    }
-    //
-    return fork;
-  }
+	    if (this.overflowFlag != UNKNOWN) {
+	        // The outcome is known.
+	        if (this.overflowFlag == TRUE) {
+	            this.programCounter = (this.programCounter + insn.k + 1);
+	        } else {
+	            this.programCounter = this.programCounter + 1;
+	        }
+	        return null; // No fork created.
+	    } else {
+	        // The outcome is unknown. We have a choice point.
+	        // Fork the state.
+	        AbstractAvr fork = this.clone();
+
+	        // In the original state, concretize the overflowFlag as TRUE.
+	        this.overflowFlag = TRUE;
+	        this.programCounter = (this.programCounter + insn.k + 1);
+
+	        // In the forked state, concretize the overflowFlag as FALSE.
+	        fork.overflowFlag = FALSE;
+	        fork.programCounter = fork.programCounter + 1;
+
+	        // Return the forked state.
+	        return fork;
+	    }
+	}
+
 
   /**
    * Sets a single Flag or bit in SREG.
@@ -1444,17 +1713,35 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.CPSE insn) {
-    this.programCounter = this.programCounter + 1;
-    Byte rd = this.data.read(insn.Rd);
-    Byte rr = this.data.read(insn.Rr);
-    Bit b = rd.eq(rr);
-    if (b == TRUE) {
-      AvrInstruction following = decode(this.programCounter);
-      this.programCounter = (this.programCounter + following.getWidth());
-    }
-    //
-    return null;
-  }
+	  this.programCounter = this.programCounter + 1;
+	  Byte rd = this.data.read(insn.Rd);
+	  Byte rr = this.data.read(insn.Rr);
+	  Bit b = rd.eq(rr);
+	  AbstractAvr fork = null;
+	  AvrInstruction following = decode(this.programCounter);
+	  int pc = (this.programCounter + following.getWidth());
+	  
+	  // Identify if the outcome is known or unknown.
+	  if(b == UNKNOWN) {
+	    // In the case of an unknown outcome, fork the current state.
+	    fork = this.clone();
+
+	    // In the fork, we assume rd and rr are equal and the next instruction is skipped.
+	    fork.programCounter = pc;
+
+	    // In the original state, we assume rd and rr are not equal and the next instruction is not skipped.
+	    this.programCounter = this.programCounter + 1;
+	  } else {
+	    // If outcome is known, execute as normal
+	    if (b == TRUE) {
+	      this.programCounter = pc;
+	    }
+	  }
+	  
+	  // Execute both forks as we have known values in both cases.
+	  return fork;
+	}
+
 
   /**
    * Subtracts one from the contents of register rd and places the result in the
