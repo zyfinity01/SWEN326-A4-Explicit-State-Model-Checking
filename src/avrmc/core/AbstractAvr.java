@@ -1705,6 +1705,43 @@ public class AbstractAvr implements Cloneable {
     return null;
   }
 
+//  /**
+//   * This instruction performs a compare between two registers rd and rr, and
+//   * skips the next instruction if rd = rr.
+//   *
+//   * @param insn Instruction being executed
+//   * @return Forked AVR state or <code>null</code> (if no fork).
+//   */
+//  private @Nullable AbstractAvr execute(AvrInstruction.CPSE insn) {
+//	  this.programCounter = this.programCounter + 1;
+//	  Byte rd = this.data.read(insn.Rd);
+//	  Byte rr = this.data.read(insn.Rr);
+//	  Bit b = rd.eq(rr);
+//	  AbstractAvr fork = null;
+//	  AvrInstruction following = decode(this.programCounter);
+//	  int pc = (this.programCounter + following.getWidth());
+//	  
+//	  // Identify if the outcome is known or unknown.
+//	  if(b == UNKNOWN) {
+//	    // In the case of an unknown outcome, fork the current state.
+//	    fork = this.clone();
+//
+//	    // In the fork, we assume rd and rr are equal and the next instruction is skipped.
+//	    fork.programCounter = pc;
+//
+//	    // In the original state, we assume rd and rr are not equal and the next instruction is not skipped.
+//	    this.programCounter = this.programCounter + 1;
+//	  } else {
+//	    // If outcome is known, execute as normal
+//	    if (b == TRUE) {
+//	      this.programCounter = pc;
+//	    }
+//	  }
+//	  
+//	  // Execute both forks as we have known values in both cases.
+//	  return fork;
+//	}
+  
   /**
    * This instruction performs a compare between two registers rd and rr, and
    * skips the next instruction if rd = rr.
@@ -1713,33 +1750,22 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.CPSE insn) {
-	  this.programCounter = this.programCounter + 1;
-	  Byte rd = this.data.read(insn.Rd);
-	  Byte rr = this.data.read(insn.Rr);
-	  Bit b = rd.eq(rr);
-	  AbstractAvr fork = null;
-	  AvrInstruction following = decode(this.programCounter);
-	  int pc = (this.programCounter + following.getWidth());
-	  
-	  // Identify if the outcome is known or unknown.
-	  if(b == UNKNOWN) {
-	    // In the case of an unknown outcome, fork the current state.
-	    fork = this.clone();
-
-	    // In the fork, we assume rd and rr are equal and the next instruction is skipped.
-	    fork.programCounter = pc;
-
-	    // In the original state, we assume rd and rr are not equal and the next instruction is not skipped.
 	    this.programCounter = this.programCounter + 1;
-	  } else {
-	    // If outcome is known, execute as normal
+	    Byte rd = this.data.read(insn.Rd);
+	    Byte rr = this.data.read(insn.Rr);
+	    Bit b = rd.eq(rr);
+	    AbstractAvr fork = null;
 	    if (b == TRUE) {
-	      this.programCounter = pc;
+	      AvrInstruction following = decode(this.programCounter);
+	      this.programCounter = (this.programCounter + following.getWidth());
 	    }
-	  }
-	  
-	  // Execute both forks as we have known values in both cases.
-	  return fork;
+	    if (b == UNKNOWN) {
+	      fork = this.clone();
+	      AvrInstruction following = decode(this.programCounter);
+	      fork.programCounter = (this.programCounter + following.getWidth());
+	    }
+
+	    return fork;
 	}
 
 
@@ -3451,14 +3477,15 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
    */
   private static Bit and(Bit... bits) {
 	  boolean hasUnknown = false;
-	  for (Bit ith : bits) {
-	    if (ith == FALSE) {
-	      return FALSE;
+	    for (int i = 0; i != bits.length; ++i) {
+	        Bit ith = bits[i];
+		    if (ith == FALSE) {
+		      return FALSE;
+		    }
+		    if (ith == UNKNOWN) {
+		      hasUnknown = true;
+		    }
 	    }
-	    if (ith == UNKNOWN) {
-	      hasUnknown = true;
-	    }
-	  }
 	  return hasUnknown ? UNKNOWN : TRUE;
 	}
 
@@ -3473,14 +3500,15 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
    */
   private static Bit or(Bit... bits) {
 	  boolean hasUnknown = false;
-	  for (Bit ith : bits) {
-	    if (ith == TRUE) {
-	      return TRUE;
+	    for (int i = 0; i != bits.length; ++i) {
+	        Bit ith = bits[i];
+	        if (ith == TRUE) {
+	          return TRUE;
+	        }
+		    if (ith == UNKNOWN) {
+		      hasUnknown = true;
+		    }
 	    }
-	    if (ith == UNKNOWN) {
-	      hasUnknown = true;
-	    }
-	  }
 	  return hasUnknown ? UNKNOWN : FALSE;
 	}
 

@@ -124,15 +124,6 @@ public class AbstractMemory {
       return new Byte((byte) (this.value + rhs.value));
     }
 
-//    /**
-//     * Perform a bitwise AND against another byte.
-//     *
-//     * @param rhs Right hand parameter for this operation.
-//     * @return Resulting byte.
-//     */
-//    public Byte and(Byte rhs) {
-//      return new Byte((byte) (this.value & rhs.value));
-//    }
     
     /**
      * Perform a bitwise AND operation against another abstract byte.
@@ -141,14 +132,13 @@ public class AbstractMemory {
      * @return Resulting byte.
      */
     public Byte and(Byte rhs) {
-        if (this.isUnknown() || rhs.isUnknown()) {
-            if (this.value == 0 || rhs.value == 0) {
-                return new Byte((byte) 0); // False AND Unknown = False
-            }
-            return UNKNOWN; // Unknown AND True = Unknown
+        if(this.isUnknown() || rhs.isUnknown()) {
+        	return UNKNOWN;
         }
         return new Byte((byte) (this.value & rhs.value)); // standard binary AND for True and False
     }
+    
+    
 
     /**
      * Clear a specific bit in this abstract byte.
@@ -168,6 +158,7 @@ public class AbstractMemory {
      * @return Resulting byte.
      */
     public Bit eq(Byte rhs) {
+      if (this.isUnknown() || rhs.isUnknown()) return Bit.UNKNOWN;
       return this.value == rhs.value ? Bit.TRUE : Bit.FALSE;
     }
 
@@ -213,6 +204,7 @@ public class AbstractMemory {
      * @return Result of test against zero (which may be unknown).
      */
     public Bit isZero() {
+      if (this.isUnknown()) return Bit.UNKNOWN;
       if (this.value == 0) {
         return Bit.TRUE;
       }
@@ -225,6 +217,7 @@ public class AbstractMemory {
      * @return Result of test against zero (which may be unknown).
      */
     public Bit isNotZero() {
+      if (this.isUnknown()) return Bit.UNKNOWN;
       if (this.value != 0) {
         return Bit.TRUE;
       }
@@ -283,11 +276,7 @@ public class AbstractMemory {
      */
     public Byte or(Byte rhs) {
         if (this.isUnknown() || rhs.isUnknown()) {
-            if (this.value == 1 || rhs.value == 1) {
-                return new Byte((byte) 1); // True OR Unknown = True
-                
-            }
-            return UNKNOWN; // Unknown OR False = Unknown
+            return UNKNOWN;
         }
         return new Byte((byte) (this.value | rhs.value)); // standard binary OR for True and False
     }
@@ -349,7 +338,7 @@ public class AbstractMemory {
      * @return Resulting byte.
      */
     public Byte sub(byte rhs) {
-      if (this.isUnknown() || Byte.from(rhs).isUnknown()) return UNKNOWN;
+      if (this.isUnknown()) return UNKNOWN;
       return new Byte((byte) (this.value - rhs));
     }
 
@@ -383,13 +372,7 @@ public class AbstractMemory {
      */
     public Byte xor(Byte rhs) {
         if (this.isUnknown() || rhs.isUnknown()) {
-            if (this.value == rhs.value) {
-                return new Byte((byte) 0); // True XOR True = False, False XOR False = False, Unknown XOR Unknown = False
-            }
-            if (this.value == 1 || rhs.value == 1) {
-                return new Byte((byte) 0); // True XOR Unknown = False
-            }
-            return UNKNOWN; // Unknown XOR False = Unknown
+            return UNKNOWN;
         }
         return new Byte((byte) (this.value ^ rhs.value)); // standard binary XOR for True and False
     }
