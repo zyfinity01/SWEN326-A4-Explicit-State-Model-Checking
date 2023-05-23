@@ -8,6 +8,7 @@ import avrmc.core.AbstractMemory.Bit;
 import avrmc.core.AbstractMemory.Byte;
 import avrmc.core.AbstractMemory.Word;
 import java.io.PrintStream;
+import java.util.Objects;
 import javr.core.AVR;
 import javr.core.AVR.Memory;
 import javr.core.AvrDecoder;
@@ -173,6 +174,61 @@ public class AbstractAvr implements Cloneable {
    */
   public int getProgramCounter() {
     return this.programCounter;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.data, Integer.valueOf(this.programCounter), this.carryFlag,
+        this.zeroFlag, this.negativeFlag, this.overflowFlag, this.signFlag, this.halfCarryFlag,
+        this.bitcopyFlag, this.interruptFlag);
+  }
+
+  @Override
+  public boolean equals(@Nullable Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    AbstractAvr other = (AbstractAvr) obj;
+    if (this.data.size() != other.data.size()) {
+      return false;
+    }
+    if (!this.data.equals(other.data)) {
+      return false;
+    }
+    if (this.programCounter != other.programCounter) {
+      return false;
+    }
+    if (!this.carryFlag.equals(other.carryFlag)) {
+      return false;
+    }
+    if (!this.zeroFlag.equals(other.zeroFlag)) {
+      return false;
+    }
+    if (!this.negativeFlag.equals(other.negativeFlag)) {
+      return false;
+    }
+    if (!this.overflowFlag.equals(other.overflowFlag)) {
+      return false;
+    }
+    if (!this.signFlag.equals(other.signFlag)) {
+      return false;
+    }
+    if (!this.halfCarryFlag.equals(other.halfCarryFlag)) {
+      return false;
+    }
+    if (!this.bitcopyFlag.equals(other.bitcopyFlag)) {
+      return false;
+    }
+    if (!this.interruptFlag.equals(other.interruptFlag)) {
+      return false;
+    }
+    return true;
   }
 
   /**

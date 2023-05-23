@@ -1,6 +1,8 @@
 package avrmc.core;
 
+import java.util.Arrays;
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * Provides an abstract version of javr.core.Memory which holds abstract values,
@@ -73,6 +75,35 @@ public class AbstractMemory {
   }
 
   /**
+   * Returns a hash code value for this abstract memory.
+   *
+   * @return a hash code value.
+   */
+  @Override
+  public int hashCode() {
+    return Arrays.hashCode(this.bytes);
+  }
+
+  /**
+   * Checks if the specified object is equal to this abstract memory.
+   *
+   * @param obj the object to compare.
+   * @return true if equal, false otherwise.
+   */
+  @Override
+  public boolean equals(@Nullable Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    AbstractMemory other = (AbstractMemory) obj;
+
+    return Arrays.equals(this.bytes, other.bytes);
+  }
+
+  /**
    * Represents a byte in memory which has a potentially <i>unknown</i> value.
    *
    * @author David J. Pearce
@@ -109,6 +140,55 @@ public class AbstractMemory {
     private Byte() {
       this.value = 0;
       this.unknown = true;
+    }
+
+    /**
+     * Returns a hash code value for the object.
+     *
+     * @return a hash code value for this object. When 'unknown' is true, only the
+     *         'unknown' field contributes to the hash code. Otherwise, both the
+     *         'unknown' and 'value' fields contribute.
+     */
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 7;
+      if (this.isUnknown()) {
+        result = prime * result + 128;
+      } else {
+        result = prime * result + this.value;
+      }
+      return result;
+    }
+
+    /**
+     * Compares this Byte object with the specified object for equality. Returns
+     * true if the specified object is also a Byte object and has the same value and
+     * unknown flag as this object.
+     *
+     * @param obj the object to compare for equality
+     * @return true if the specified object is equal to this Byte object, false
+     *         otherwise
+     */
+    @Override
+    public boolean equals(@Nullable Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      Byte other = (Byte) obj;
+      if (this.unknown != other.unknown) {
+        return false;
+      }
+      if (this.value != other.value) {
+        return false;
+      }
+      return true;
     }
 
     /**
@@ -267,7 +347,6 @@ public class AbstractMemory {
       }
       return new Byte((byte) (0xFF - this.value));
     }
-
 
     /**
      * Perform a bitwise OR operation against another abstract byte.
@@ -500,6 +579,65 @@ public class AbstractMemory {
     }
 
     /**
+     * Returns a hash code value for the object. This method is supported for the
+     * benefit of hash tables such as those provided by {@link java.util.HashMap}.
+     *
+     * @return a hash code value for this object. When 'unknown' is true, only the
+     *         'unknown' field contributes to the hash code. Otherwise, both the
+     *         'unknown' and 'value' fields contribute.
+     */
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 7;
+      if (this.isUnknown()) {
+        result = prime * result + 128;
+      } else {
+        result = prime * result + this.value;
+      }
+      return result;
+    }
+
+    /**
+     * Indicates whether some other object is "equal to" this one. The 'equals'
+     * method implements an equivalence relation on non-null object references: It
+     * is reflexive: for any non-null reference value x, x.equals(x) should return
+     * true. It is symmetric: for any non-null reference values x and y, x.equals(y)
+     * should return true if and only if y.equals(x) returns true. It is transitive:
+     * for any non-null reference values x, y, and z, if x.equals(y) returns true
+     * and y.equals(z) returns true, then x.equals(z) should return true. It is
+     * consistent: for any non-null reference values x and y, multiple invocations
+     * of x.equals(y) consistently return true or consistently return false,
+     * provided no information used in equals comparisons on the objects is
+     * modified. For any non-null reference value x, x.equals(null) should return
+     * false.
+     *
+     * @param obj the reference object with which to compare.
+     * @return true if this object is the same as the obj argument; false otherwise.
+     */
+    @Override
+    public boolean equals(@Nullable Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      Word other = (Word) obj;
+      if (this.unknown != other.unknown) {
+        return false;
+      }
+      if (this.value != other.value) {
+        return false;
+      }
+      return true;
+    }
+
+
+    /**
      * Add a constant onto this word.
      *
      * @param rhs Right hand parameter for this operation.
@@ -675,6 +813,44 @@ public class AbstractMemory {
      */
     private Bit() {
 
+    }
+
+    /**
+     * Returns a hash code for this Bit object. The hash code for UNKNOWN is 2, for
+     * TRUE is 1, and for FALSE is 0.
+     *
+     * @return the integer 2, 1, or 0 as hash code.
+     */
+    @Override
+    public int hashCode() {
+      if (this == UNKNOWN) {
+        return 2;
+      } else if (this == TRUE) {
+        return 1;
+      } else { // this == FALSE
+        return 0;
+      }
+    }
+
+    /**
+     * Compares this Bit to the specified object. The result is true if and only if
+     * the argument is not null and is a Bit object that represents the same value
+     * as this object.
+     *
+     * @param obj the object to compare this Bit against.
+     * @return true if the given object represents a Bit equivalent to this bit,
+     *         false otherwise.
+     */
+    @Override
+    public boolean equals(@Nullable Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+      Bit otherBit = (Bit) obj;
+      return this == otherBit;
     }
 
     @Override

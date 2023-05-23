@@ -2,6 +2,7 @@ package avrmc.core;
 
 import avrmc.core.AbstractMemory.Byte;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import javr.core.AVR;
 import org.eclipse.jdt.annotation.Nullable;
@@ -41,6 +42,7 @@ public class AvrModelChecker<T> {
    * @return Computed property value.
    */
   public T apply(AbstractAvr seed) {
+    HashSet<AbstractAvr> history = new HashSet<>();
     ArrayList<AbstractAvr> worklist = new ArrayList<>();
     // See the worklist
     worklist.add(seed);
@@ -59,6 +61,11 @@ public class AvrModelChecker<T> {
           resetIoPort(state);
           // Execute one step the state
           fork = state.clock();
+
+          if (history.contains(state)) {
+            throw new AVR.HaltedException(0);
+          }
+          history.add(state);
           // Determine property for updated state
           T nvalue = this.property.map(state);
           // Join with accumulated value
@@ -125,7 +132,6 @@ public class AvrModelChecker<T> {
     state.getData().write(32 + 0x16, Byte.UNKNOWN);
   }
 
-
   /**
    * Simple helper function for pulling things off the worklist efficiently.
    *
@@ -134,7 +140,8 @@ public class AvrModelChecker<T> {
    */
   private static AbstractAvr pop(List<AbstractAvr> states) {
     int last = states.size() - 1;
-    @Nullable AbstractAvr st = states.get(last);
+    @Nullable
+    AbstractAvr st = states.get(last);
     states.remove(last);
     return st;
   }
