@@ -2596,7 +2596,7 @@ public class AbstractAvr implements Cloneable {
   /**
    * This instruction tests a single bit in an I/O register and skips the next
    * instruction if the bit is cleared. This instruction operates on the lower 32
-   * I/O registers – addresses 0-31.
+   * I/O registers addresses 0-31.
    *
    * @param insn Instruction being executed
    * @return Forked AVR state or <code>null</code> (if no fork).
