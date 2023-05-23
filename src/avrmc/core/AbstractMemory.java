@@ -118,13 +118,14 @@ public class AbstractMemory {
      * @return Resulting byte.
      */
     public Byte add(Byte rhs) {
-      //if either this or rhs are UNKNOWN in addition, then return UNKNOWN
-      if (this.isUnknown() || rhs.isUnknown()) return UNKNOWN;
-      //continue if neither are UNKOWN
+      // if either this or rhs are UNKNOWN in addition, then return UNKNOWN
+      if (this.isUnknown() || rhs.isUnknown()) {
+        return UNKNOWN;
+      }
+      // continue if neither are UNKOWN
       return new Byte((byte) (this.value + rhs.value));
     }
 
-    
     /**
      * Perform a bitwise AND operation against another abstract byte.
      *
@@ -132,13 +133,11 @@ public class AbstractMemory {
      * @return Resulting byte.
      */
     public Byte and(Byte rhs) {
-        if(this.isUnknown() || rhs.isUnknown()) {
-        	return UNKNOWN;
-        }
-        return new Byte((byte) (this.value & rhs.value)); // standard binary AND for True and False
+      if (this.isUnknown() || rhs.isUnknown()) {
+        return UNKNOWN;
+      }
+      return new Byte((byte) (this.value & rhs.value)); // standard binary AND for True and False
     }
-    
-    
 
     /**
      * Clear a specific bit in this abstract byte.
@@ -158,7 +157,9 @@ public class AbstractMemory {
      * @return Resulting byte.
      */
     public Bit eq(Byte rhs) {
-      if (this.isUnknown() || rhs.isUnknown()) return Bit.UNKNOWN;
+      if (this.isUnknown() || rhs.isUnknown()) {
+        return Bit.UNKNOWN;
+      }
       return this.value == rhs.value ? Bit.TRUE : Bit.FALSE;
     }
 
@@ -184,7 +185,9 @@ public class AbstractMemory {
      * @return Updated byte.
      */
     public Byte inc() {
-      if (this.isUnknown()) return UNKNOWN;
+      if (this.isUnknown()) {
+        return UNKNOWN;
+      }
       return new Byte((byte) (this.value + 1));
     }
 
@@ -204,7 +207,9 @@ public class AbstractMemory {
      * @return Result of test against zero (which may be unknown).
      */
     public Bit isZero() {
-      if (this.isUnknown()) return Bit.UNKNOWN;
+      if (this.isUnknown()) {
+        return Bit.UNKNOWN;
+      }
       if (this.value == 0) {
         return Bit.TRUE;
       }
@@ -217,7 +222,9 @@ public class AbstractMemory {
      * @return Result of test against zero (which may be unknown).
      */
     public Bit isNotZero() {
-      if (this.isUnknown()) return Bit.UNKNOWN;
+      if (this.isUnknown()) {
+        return Bit.UNKNOWN;
+      }
       if (this.value != 0) {
         return Bit.TRUE;
       }
@@ -243,7 +250,9 @@ public class AbstractMemory {
      * @return Negated byte.
      */
     public Byte neg() {
-      if (this.isUnknown()) return UNKNOWN; 
+      if (this.isUnknown()) {
+        return UNKNOWN;
+      }
       return new Byte((byte) -this.value);
     }
 
@@ -253,21 +262,13 @@ public class AbstractMemory {
      * @return Inverted byte.
      */
     public Byte inv() {
-      if (this.isUnknown()) return UNKNOWN;
+      if (this.isUnknown()) {
+        return UNKNOWN;
+      }
       return new Byte((byte) (0xFF - this.value));
     }
 
-//    /**
-//     * Perform a bitwise OR operation against another abstract byte.
-//     *
-//     * @param rhs Right hand parameter for this operation.
-//     * @return Resulting byte.
-//     */
-//    public Byte or(Byte rhs) {
-//      return new Byte((byte) (this.value | rhs.value));
-//    }
-    
-    
+
     /**
      * Perform a bitwise OR operation against another abstract byte.
      *
@@ -275,10 +276,10 @@ public class AbstractMemory {
      * @return Resulting byte.
      */
     public Byte or(Byte rhs) {
-        if (this.isUnknown() || rhs.isUnknown()) {
-            return UNKNOWN;
-        }
-        return new Byte((byte) (this.value | rhs.value)); // standard binary OR for True and False
+      if (this.isUnknown() || rhs.isUnknown()) {
+        return UNKNOWN;
+      }
+      return new Byte((byte) (this.value | rhs.value)); // standard binary OR for True and False
     }
 
     /**
@@ -288,7 +289,9 @@ public class AbstractMemory {
      * @return Updated byte.
      */
     public Byte set(int index) {
-      if (this.isUnknown()) return UNKNOWN;
+      if (this.isUnknown()) {
+        return UNKNOWN;
+      }
       int mask = 1 << index;
       return new Byte((byte) (this.value | mask));
     }
@@ -302,7 +305,9 @@ public class AbstractMemory {
      * @return Updated byte.
      */
     public Byte set(int index, Bit bit) {
-      if (this.isUnknown() || bit == Bit.UNKNOWN) return UNKNOWN;
+      if (this.isUnknown() || bit == Bit.UNKNOWN) {
+        return UNKNOWN;
+      }
       if (bit == Bit.TRUE) {
         return set(index);
       }
@@ -316,7 +321,9 @@ public class AbstractMemory {
      * @return Resulting byte.
      */
     public Byte shr(int rhs) {
-      if (this.isUnknown()) return UNKNOWN;
+      if (this.isUnknown()) {
+        return UNKNOWN;
+      }
       return new Byte((byte) (this.value >> rhs));
     }
 
@@ -327,7 +334,9 @@ public class AbstractMemory {
      * @return Resulting byte.
      */
     public Byte sub(Byte rhs) {
-      if (this.isUnknown() || rhs.isUnknown()) return UNKNOWN;
+      if (this.isUnknown() || rhs.isUnknown()) {
+        return UNKNOWN;
+      }
       return new Byte((byte) (this.value - rhs.value));
     }
 
@@ -338,7 +347,9 @@ public class AbstractMemory {
      * @return Resulting byte.
      */
     public Byte sub(byte rhs) {
-      if (this.isUnknown()) return UNKNOWN;
+      if (this.isUnknown()) {
+        return UNKNOWN;
+      }
       return new Byte((byte) (this.value - rhs));
     }
 
@@ -349,21 +360,13 @@ public class AbstractMemory {
      * @return Resulting byte.
      */
     public Byte ushr(int rhs) {
-      if (this.isUnknown()) return UNKNOWN;
+      if (this.isUnknown()) {
+        return UNKNOWN;
+      }
       int v = (0xff & this.value) >>> rhs;
       return new Byte((byte) v);
     }
 
-//    /**
-//     * Perform a bitwise XOR operation against another abstract byte.
-//     *
-//     * @param rhs Right hand parameter for this operation.
-//     * @return Resulting byte.
-//     */
-//    public Byte xor(Byte rhs) {
-//      return new Byte((byte) (this.value ^ rhs.value));
-//    }
-    
     /**
      * Perform a bitwise XOR operation against another abstract byte.
      *
@@ -371,12 +374,11 @@ public class AbstractMemory {
      * @return Resulting byte.
      */
     public Byte xor(Byte rhs) {
-        if (this.isUnknown() || rhs.isUnknown()) {
-            return UNKNOWN;
-        }
-        return new Byte((byte) (this.value ^ rhs.value)); // standard binary XOR for True and False
+      if (this.isUnknown() || rhs.isUnknown()) {
+        return UNKNOWN;
+      }
+      return new Byte((byte) (this.value ^ rhs.value)); // standard binary XOR for True and False
     }
-
 
     /**
      * Swaps high and low nibbles in a register.
@@ -384,7 +386,9 @@ public class AbstractMemory {
      * @return Resulting byte.
      */
     public Byte swap() {
-      if (this.isUnknown()) return UNKNOWN;
+      if (this.isUnknown()) {
+        return UNKNOWN;
+      }
       int lsn = this.value & 0b0000_1111;
       int msn = this.value & 0b1111_0000;
       return new Byte((byte) ((lsn << 4) | (msn >> 4)));
@@ -400,6 +404,13 @@ public class AbstractMemory {
       return r;
     }
 
+    /**
+     * Converts the Byte object to a byte value.
+     *
+     * @return The byte value of the Byte object.
+     * @throws IllegalArgumentException if the Byte object is unknown (cannot be
+     *                                  concretized).
+     */
     public byte toByte() {
       if (this.unknown) {
         throw new IllegalArgumentException("Cannot concretize unknown value"); //$NON-NLS-1$
@@ -682,34 +693,39 @@ public class AbstractMemory {
   // Testing
   // =========================================================================
 
+  /**
+   * The main method that demonstrates various byte and word operations.
+   *
+   * @param args The command line arguments (unused).
+   */
   public static void main(String[] args) {
     // Unary byte operations first
-    for(int i=0;i<256;++i) {
+    for (int i = 0; i < 256; ++i) {
       byte b = (byte) i;
       Byte B = Byte.from(b);
       // isZer0
       check(b == 0, B.isZero());
       check(b != 0, B.isNotZero());
       check(b == -128, B.isLeast());
-      check((byte) -b , B.neg());
-      check((byte) (0xFF - b) , B.inv());
+      check((byte) -b, B.neg());
+      check((byte) (0xFF - b), B.inv());
       check(swap(b), B.swap());
       check((byte) (b + 1), B.inc());
       for (int j = 0; j < 8; ++j) {
         check(clear(b, j), B.clear(j));
         check(get(b, j), B.get(j));
         check(set(b, j), B.set(j));
-        check(set(b, j), B.set(j,Bit.TRUE));
-        check(clear(b, j), B.set(j,Bit.FALSE));
+        check(set(b, j), B.set(j, Bit.TRUE));
+        check(clear(b, j), B.set(j, Bit.FALSE));
         check((byte) (b >> j), B.shr(j));
         check((byte) ((b & 0xFF) >>> j), B.ushr(j));
       }
     }
     // Binary byte operations
-    for(int i=0;i<256;++i) {
+    for (int i = 0; i < 256; ++i) {
       byte b1 = (byte) i;
       Byte B1 = Byte.from(b1);
-      for(int j=0;j<256;++j) {
+      for (int j = 0; j < 256; ++j) {
         byte b2 = (byte) j;
         Byte B2 = Byte.from(b2);
         check((byte) (b1 + b2), B1.add(B2));
@@ -724,21 +740,21 @@ public class AbstractMemory {
       }
     }
     // unary word operations
-    for(int i=0;i<65536;++i) {
+    for (int i = 0; i < 65536; ++i) {
       Word I = Word.from(i);
       check(i - 1, I.dec());
-      check(getLow(i),I.getLow());
-      check(getHigh(i),I.getHigh());
+      check(getLow(i), I.getLow());
+      check(getHigh(i), I.getHigh());
       check(i + 1, I.inc());
       check(i == 0, I.isZero());
       for (int j = 0; j < 16; ++j) {
-        check(get(i,j),I.get(j));
+        check(get(i, j), I.get(j));
       }
     }
     // binary word operations
-    for(int i=0;i<65536;++i) {
+    for (int i = 0; i < 65536; ++i) {
       Word I = Word.from(i);
-      for(int j=0;j<256;++j) {
+      for (int j = 0; j < 256; ++j) {
         byte b = (byte) j;
         check(i + b, I.add(b));
         check(i - b, I.sub(b));
@@ -746,40 +762,93 @@ public class AbstractMemory {
     }
   }
 
+  /**
+   * Retrieves the lower byte (LSB) of a given word.
+   *
+   * @param word The input word.
+   * @return The lower byte (LSB) of the word as a byte value.
+   */
   public static byte getLow(int word) {
     return (byte) (word & 0xFF);
   }
 
+  /**
+   * Retrieves the higher byte (MSB) of a given word.
+   *
+   * @param word The input word.
+   * @return The higher byte (MSB) of the word as a byte value.
+   */
   public static byte getHigh(int word) {
     return (byte) (word >> 8);
   }
 
+  /**
+   * Combines two bytes (MSB and LSB) to form an integer word.
+   *
+   * @param m The most significant byte (MSB).
+   * @param l The least significant byte (LSB).
+   * @return The combined word as an integer.
+   */
   public static int toWord(byte m, byte l) {
     int msb = m & 0xFF;
     int lsb = l & 0xFF;
     return (msb << 8) | lsb;
   }
 
+  /**
+   * Clears the bit at the specified index in a byte value.
+   *
+   * @param b     The byte value.
+   * @param index The index of the bit to be cleared.
+   * @return The byte with the specified bit cleared.
+   */
   public static byte clear(byte b, int index) {
     int mask = (1 << index);
     return (byte) (b & ~mask);
   }
 
+  /**
+   * Retrieves the value of the bit at the specified index in an integer.
+   *
+   * @param w     The integer value.
+   * @param index The index of the bit to retrieve.
+   * @return The value of the bit at the specified index (true or false).
+   */
   public static boolean get(int w, int index) {
     int mask = (1 << index);
     return (w & mask) != 0;
   }
 
+  /**
+   * Retrieves the value of the bit at the specified index in a byte.
+   *
+   * @param b     The byte value.
+   * @param index The index of the bit to retrieve.
+   * @return The value of the bit at the specified index (true or false).
+   */
   public static boolean get(byte b, int index) {
     int mask = (1 << index);
     return (b & mask) != 0;
   }
 
+  /**
+   * Sets the bit at the specified index in a byte value.
+   *
+   * @param b     The byte value.
+   * @param index The index of the bit to be set.
+   * @return The byte with the specified bit set.
+   */
   public static byte set(byte b, int index) {
     int mask = (1 << index);
     return (byte) (b | mask);
   }
 
+  /**
+   * Swaps the nibbles (4-bit halves) of a byte value.
+   *
+   * @param b The byte value.
+   * @return The byte with its nibbles swapped.
+   */
   public static byte swap(byte b) {
     // Perform the operation
     int lsn = b & 0b0000_1111;
@@ -787,25 +856,58 @@ public class AbstractMemory {
     return (byte) ((lsn << 4) | (msn >> 4));
   }
 
+  /**
+   * Checks if an integer value matches the value of a given Word object. Throws
+   * an IllegalArgumentException if they do not match.
+   *
+   * @param l The integer value to compare.
+   * @param r The Word object to compare against.
+   * @throws IllegalArgumentException if the values do not match.
+   */
   public static void check(int l, Word r) {
-    if(l != r.toInt()) {
+    if (l != r.toInt()) {
       throw new IllegalArgumentException();
     }
   }
 
+  /**
+   * Checks if a byte value matches the value of a Byte object. Throws an
+   * IllegalArgumentException if they do not match.
+   *
+   * @param l The byte value to compare.
+   * @param r The Byte object to compare against.
+   * @throws IllegalArgumentException if the values do not match.
+   */
   public static void check(byte l, Byte r) {
-    if(l != r.toByte()) {
+    if (l != r.toByte()) {
       throw new IllegalArgumentException();
     }
   }
 
+  /**
+   * Checks if a boolean value matches the value of a Bit object. Throws an
+   * IllegalArgumentException if they do not match.
+   *
+   * @param l The boolean value to compare.
+   * @param r The Bit object to compare against.
+   * @throws IllegalArgumentException if the values do not match.
+   */
   public static void check(boolean l, Bit r) {
     check(l, r == Bit.TRUE);
   }
 
+  /**
+   * Checks if two boolean values match. Throws an IllegalArgumentException if
+   * they do not match.
+   *
+   * @param l The first boolean value.
+   * @param r The second boolean value.
+   * @throws IllegalArgumentException if the values do not match.
+   */
   public static void check(boolean l, boolean r) {
-    if(l != r) {
+    if (l != r) {
       throw new IllegalArgumentException();
     }
   }
+
 }

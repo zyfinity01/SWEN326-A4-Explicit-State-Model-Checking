@@ -469,7 +469,8 @@ public class AbstractAvr implements Cloneable {
    * @return Instruction at the given address.
    */
   private AvrInstruction decode(int address) {
-    @Nullable AvrInstruction insn = this.decoded[address];
+    @Nullable
+    AvrInstruction insn = this.decoded[address];
     if (insn == null) {
       // Instruction not previously decoded. Therefore, decode and cache for later.
       insn = decoder.decode(this.code, address);
@@ -727,76 +728,80 @@ public class AbstractAvr implements Cloneable {
   /**
    * Conditional relative branch. Tests a single bit in SREG and branches
    * relatively to PC if the bit is cleared. This instruction branches relatively
-   * to PC in either direction (PC - 63 ≤ destination ≤ PC + 64). Parameter k is
-   * the offset from PC and is represented in two’s complement form.
+   * to PC in either direction (PC - 63 ≤ destination ≤ PC + 64). Parameter k
+   * is the offset from PC and is represented in two’s complement form.
    *
    * @param insn Instruction being executed
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRBC insn) {
-	    Bit bit = getStatusBit(insn.s);
-	    AbstractAvr fork = null;
+    Bit bit = getStatusBit(insn.s);
+    AbstractAvr fork = null;
 
-	    // Identify if the outcome is known or unknown
-	    if(bit == UNKNOWN) {
-	        // Split & Concretize. If the outcome is unknown, fork the current state
-	        fork = this.clone();
+    // Identify if the outcome is known or unknown
+    if (bit == UNKNOWN) {
+      // Split & Concretize. If the outcome is unknown, fork the current state
+      fork = this.clone();
 
-	        // On the fork, we assume the bit is TRUE and the next instruction is not skipped
-	        fork.setStatusBit(insn.s, TRUE);
-	        fork.programCounter = fork.programCounter + 1;
+      // On the fork, we assume the bit is TRUE and the next instruction is not
+      // skipped
+      fork.setStatusBit(insn.s, TRUE);
+      fork.programCounter = fork.programCounter + 1;
 
-	        // In the original state, we assume the bit is FALSE and the next instruction is skipped
-	        setStatusBit(insn.s, FALSE);
-	        this.programCounter = (this.programCounter + insn.k + 1);
-	    } else {
-	        // If outcome is known, execute as normal
-	        if (bit == FALSE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	    }
-	    // Execute both forks as we have known values in both cases.
-	    return fork;
-	}
+      // In the original state, we assume the bit is FALSE and the next instruction is
+      // skipped
+      setStatusBit(insn.s, FALSE);
+      this.programCounter = (this.programCounter + insn.k + 1);
+    } else {
+      // If outcome is known, execute as normal
+      if (bit == FALSE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+    }
+    // Execute both forks as we have known values in both cases.
+    return fork;
+  }
 
   /**
    * Conditional relative branch. Tests a single bit in SREG and branches
    * relatively to PC if the bit is set. This instruction branches relatively to
-   * PC in either direction (PC - 63 ≤ destination ≤ PC + 64). Parameter k is the
-   * offset from PC and is represented in two’s complement form.
+   * PC in either direction (PC - 63 ≤ destination ≤ PC + 64). Parameter k is
+   * the offset from PC and is represented in two’s complement form.
    *
    * @param insn Instruction being executed
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRBS insn) {
-	    Bit bit = getStatusBit(insn.s);
-	    AbstractAvr fork = null;
+    Bit bit = getStatusBit(insn.s);
+    AbstractAvr fork = null;
 
-	    // Identify if the outcome is known or unknown
-	    if(bit == UNKNOWN) {
-	        // Split & Concretize. If the outcome is unknown, fork the current state
-	        fork = this.clone();
+    // Identify if the outcome is known or unknown
+    if (bit == UNKNOWN) {
+      // Split & Concretize. If the outcome is unknown, fork the current state
+      fork = this.clone();
 
-	        // On the fork, we assume the bit is FALSE and the next instruction is not skipped
-	        fork.setStatusBit(insn.s, FALSE);
-	        fork.programCounter = fork.programCounter + 1;
+      // On the fork, we assume the bit is FALSE and the next instruction is not
+      // skipped
+      fork.setStatusBit(insn.s, FALSE);
+      fork.programCounter = fork.programCounter + 1;
 
-	        // In the original state, we assume the bit is TRUE and the next instruction is skipped
-	        setStatusBit(insn.s, TRUE);
-	        this.programCounter = (this.programCounter + insn.k + 1);
-	    } else {
-	        // If outcome is known, execute as normal
-	        if (bit == TRUE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	    }
-	    // Execute both forks as we have known values in both cases.
-	    return fork;
-	}
+      // In the original state, we assume the bit is TRUE and the next instruction is
+      // skipped
+      setStatusBit(insn.s, TRUE);
+      this.programCounter = (this.programCounter + insn.k + 1);
+    } else {
+      // If outcome is known, execute as normal
+      if (bit == TRUE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+    }
+    // Execute both forks as we have known values in both cases.
+    return fork;
+  }
 
   /**
    * Conditional relative branch. Tests the Zero Flag (Z) and branches relatively
@@ -814,14 +819,12 @@ public class AbstractAvr implements Cloneable {
   private @Nullable AbstractAvr execute(AvrInstruction.BREQ insn) {
     AbstractAvr fork = null;
     //
-    
 
     // Identify if the outcome is known or unknown
     if (this.zeroFlag == UNKNOWN) {
       // Split & Concretize. If outcome is unknown, fork the state and concretize
       // the zero flag as TRUE on one fork and FALSE on the other.
-      fork = (AbstractAvr) this.clone();
-
+      fork = this.clone();
 
       // In the fork, we assume the zeroFlag is TRUE.
       fork.zeroFlag = TRUE;
@@ -849,40 +852,38 @@ public class AbstractAvr implements Cloneable {
    * after any of the instructions CP, CPI, SUB, or SUBI, the branch will occur if
    * and only if the signed binary number represented in rd was greater than or
    * equal to the signed binary number represented in rr. This instruction
-   * branches relatively to PC in either direction (PC - 63 ≤ destination ≤ PC +
-   * 64). Parameter k is the offset from PC and is represented in two’s complement
-   * form. (Equivalent to instruction BRBC 4,k.)
+   * branches relatively to PC in either direction (PC - 63 ≤ destination ≤ PC
+   * + 64). Parameter k is the offset from PC and is represented in two’s
+   * complement form. (Equivalent to instruction BRBC 4,k.)
    *
    * @param insn Instruction being executed
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRGE insn) {
-	    if (this.signFlag != UNKNOWN) {
-	        // The outcome is known.
-	        if (this.signFlag == FALSE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	        return null; // No fork created.
-	    } else {
-	        // The outcome is unknown. We have a choice point.
-	        // Fork the state.
-	        AbstractAvr fork = this.clone();
+    if (this.signFlag != UNKNOWN) {
+      // The outcome is known.
+      if (this.signFlag == FALSE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+      return null; // No fork created.
+    }
+    // The outcome is unknown. We have a choice point.
+    // Fork the state.
+    AbstractAvr fork = this.clone();
 
-	        // In the original state, concretize the sign flag as FALSE.
-	        this.signFlag = FALSE;
-	        this.programCounter = (this.programCounter + insn.k + 1);
+    // In the original state, concretize the sign flag as FALSE.
+    this.signFlag = FALSE;
+    this.programCounter = (this.programCounter + insn.k + 1);
 
-	        // In the forked state, concretize the sign flag as TRUE.
-	        fork.signFlag = TRUE;
-	        fork.programCounter = fork.programCounter + 1;
+    // In the forked state, concretize the sign flag as TRUE.
+    fork.signFlag = TRUE;
+    fork.programCounter = fork.programCounter + 1;
 
-	        // Return the forked state.
-	        return fork;
-	    }
-	}
-
+    // Return the forked state.
+    return fork;
+  }
 
   /**
    * Conditional relative branch. Tests the Half Carry Flag (H) and branches
@@ -895,69 +896,66 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRHC insn) {
-	    if (this.halfCarryFlag != UNKNOWN) {
-	        // The outcome is known.
-	        if (this.halfCarryFlag == FALSE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	        return null; // No fork created.
-	    } else {
-	        // The outcome is unknown. We have a choice point.
-	        // Fork the state.
-	        AbstractAvr fork = this.clone();
+    if (this.halfCarryFlag != UNKNOWN) {
+      // The outcome is known.
+      if (this.halfCarryFlag == FALSE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+      return null; // No fork created.
+    }
+    // The outcome is unknown. We have a choice point.
+    // Fork the state.
+    AbstractAvr fork = this.clone();
 
-	        // In the original state, concretize the halfCarryFlag as FALSE.
-	        this.halfCarryFlag = FALSE;
-	        this.programCounter = (this.programCounter + insn.k + 1);
+    // In the original state, concretize the halfCarryFlag as FALSE.
+    this.halfCarryFlag = FALSE;
+    this.programCounter = (this.programCounter + insn.k + 1);
 
-	        // In the forked state, concretize the halfCarryFlag as TRUE.
-	        fork.halfCarryFlag = TRUE;
-	        fork.programCounter = fork.programCounter + 1;
+    // In the forked state, concretize the halfCarryFlag as TRUE.
+    fork.halfCarryFlag = TRUE;
+    fork.programCounter = fork.programCounter + 1;
 
-	        // Return the forked state.
-	        return fork;
-	    }
-	}
+    // Return the forked state.
+    return fork;
+  }
 
   /**
    * Conditional relative branch. Tests the Half Carry Flag (H) and branches
    * relatively to PC if H is set. This instruction branches relatively to PC in
-   * either direction (PC - 63 ≤ destination ≤ PC + 64). Parameter k is the offset
-   * from PC and is represented in two’s complement form. (Equivalent to
+   * either direction (PC - 63 ≤ destination ≤ PC + 64). Parameter k is the
+   * offset from PC and is represented in two’s complement form. (Equivalent to
    * instruction BRBS 5,k.)
    *
    * @param insn Instruction being executed
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRHS insn) {
-	    if (this.halfCarryFlag != UNKNOWN) {
-	        // The outcome is known.
-	        if (this.halfCarryFlag == TRUE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	        return null; // No fork created.
-	    } else {
-	        // The outcome is unknown. We have a choice point.
-	        // Fork the state.
-	        AbstractAvr fork = this.clone();
+    if (this.halfCarryFlag != UNKNOWN) {
+      // The outcome is known.
+      if (this.halfCarryFlag == TRUE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+      return null; // No fork created.
+    }
+    // The outcome is unknown. We have a choice point.
+    // Fork the state.
+    AbstractAvr fork = this.clone();
 
-	        // In the original state, concretize the halfCarryFlag as TRUE.
-	        this.halfCarryFlag = TRUE;
-	        this.programCounter = (this.programCounter + insn.k + 1);
+    // In the original state, concretize the halfCarryFlag as TRUE.
+    this.halfCarryFlag = TRUE;
+    this.programCounter = (this.programCounter + insn.k + 1);
 
-	        // In the forked state, concretize the halfCarryFlag as FALSE.
-	        fork.halfCarryFlag = FALSE;
-	        fork.programCounter = fork.programCounter + 1;
+    // In the forked state, concretize the halfCarryFlag as FALSE.
+    fork.halfCarryFlag = FALSE;
+    fork.programCounter = fork.programCounter + 1;
 
-	        // Return the forked state.
-	        return fork;
-	    }
-	}
-
+    // Return the forked state.
+    return fork;
+  }
 
   /**
    * Conditional relative branch. Tests the Global Interrupt Flag (I) and branches
@@ -970,70 +968,66 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRID insn) {
-	    if (this.interruptFlag != UNKNOWN) {
-	        // The outcome is known.
-	        if (this.interruptFlag == FALSE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	        return null; // No fork created.
-	    } else {
-	        // The outcome is unknown. We have a choice point.
-	        // Fork the state.
-	        AbstractAvr fork = this.clone();
+    if (this.interruptFlag != UNKNOWN) {
+      // The outcome is known.
+      if (this.interruptFlag == FALSE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+      return null; // No fork created.
+    }
+    // The outcome is unknown. We have a choice point.
+    // Fork the state.
+    AbstractAvr fork = this.clone();
 
-	        // In the original state, concretize the interruptFlag as FALSE.
-	        this.interruptFlag = FALSE;
-	        this.programCounter = (this.programCounter + insn.k + 1);
+    // In the original state, concretize the interruptFlag as FALSE.
+    this.interruptFlag = FALSE;
+    this.programCounter = (this.programCounter + insn.k + 1);
 
-	        // In the forked state, concretize the interruptFlag as TRUE.
-	        fork.interruptFlag = TRUE;
-	        fork.programCounter = fork.programCounter + 1;
+    // In the forked state, concretize the interruptFlag as TRUE.
+    fork.interruptFlag = TRUE;
+    fork.programCounter = fork.programCounter + 1;
 
-	        // Return the forked state.
-	        return fork;
-	    }
-	}
-
+    // Return the forked state.
+    return fork;
+  }
 
   /**
    * Conditional relative branch. Tests the Global Interrupt Flag (I) and branches
    * relatively to PC if I is set. This instruction branches relatively to PC in
-   * either direction (PC - 63 ≤ destination ≤ PC + 64). Parameter k is the offset
-   * from PC and is represented in two’s complement form. (Equivalent to
+   * either direction (PC - 63 ≤ destination ≤ PC + 64). Parameter k is the
+   * offset from PC and is represented in two’s complement form. (Equivalent to
    * instruction BRBS 7,k.)
    *
    * @param insn Instruction being executed
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRIE insn) {
-	    if (this.interruptFlag != UNKNOWN) {
-	        // The outcome is known.
-	        if (this.interruptFlag == TRUE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	        return null; // No fork created.
-	    } else {
-	        // The outcome is unknown. We have a choice point.
-	        // Fork the state.
-	        AbstractAvr fork = this.clone();
+    if (this.interruptFlag != UNKNOWN) {
+      // The outcome is known.
+      if (this.interruptFlag == TRUE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+      return null; // No fork created.
+    }
+    // The outcome is unknown. We have a choice point.
+    // Fork the state.
+    AbstractAvr fork = this.clone();
 
-	        // In the original state, concretize the interruptFlag as TRUE.
-	        this.interruptFlag = TRUE;
-	        this.programCounter = (this.programCounter + insn.k + 1);
+    // In the original state, concretize the interruptFlag as TRUE.
+    this.interruptFlag = TRUE;
+    this.programCounter = (this.programCounter + insn.k + 1);
 
-	        // In the forked state, concretize the interruptFlag as FALSE.
-	        fork.interruptFlag = FALSE;
-	        fork.programCounter = fork.programCounter + 1;
+    // In the forked state, concretize the interruptFlag as FALSE.
+    fork.interruptFlag = FALSE;
+    fork.programCounter = fork.programCounter + 1;
 
-	        // Return the forked state.
-	        return fork;
-	    }
-	}
-
+    // Return the forked state.
+    return fork;
+  }
 
   /**
    * Conditional relative branch. Tests the Carry Flag (C) and branches relatively
@@ -1049,32 +1043,30 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRLO insn) {
-	    if (this.carryFlag != UNKNOWN) {
-	        // The outcome is known.
-	        if (this.carryFlag == TRUE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	        return null; // No fork created.
-	    } else {
-	        // The outcome is unknown. We have a choice point.
-	        // Fork the state.
-	        AbstractAvr fork = this.clone();
+    if (this.carryFlag != UNKNOWN) {
+      // The outcome is known.
+      if (this.carryFlag == TRUE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+      return null; // No fork created.
+    }
+    // The outcome is unknown. We have a choice point.
+    // Fork the state.
+    AbstractAvr fork = this.clone();
 
-	        // In the original state, concretize the carryFlag as TRUE.
-	        this.carryFlag = TRUE;
-	        this.programCounter = (this.programCounter + insn.k + 1);
+    // In the original state, concretize the carryFlag as TRUE.
+    this.carryFlag = TRUE;
+    this.programCounter = (this.programCounter + insn.k + 1);
 
-	        // In the forked state, concretize the carryFlag as FALSE.
-	        fork.carryFlag = FALSE;
-	        fork.programCounter = fork.programCounter + 1;
+    // In the forked state, concretize the carryFlag as FALSE.
+    fork.carryFlag = FALSE;
+    fork.programCounter = fork.programCounter + 1;
 
-	        // Return the forked state.
-	        return fork;
-	    }
-	}
-
+    // Return the forked state.
+    return fork;
+  }
 
   /**
    * Conditional relative branch. Tests the Signed Flag (S) and branches
@@ -1082,78 +1074,74 @@ public class AbstractAvr implements Cloneable {
    * after any of the instructions CP, CPI, SUB, or SUBI, the branch will occur if
    * and only if, the signed binary number represented in rd was less than the
    * signed binary number represented in rr. This instruction branches relatively
-   * to PC in either direction (PC - 63 ≤ destination ≤ PC + 64). Parameter k is
-   * the offset from PC and is represented in two’s complement form. (Equivalent
-   * to instruction BRBS 4,k.)
+   * to PC in either direction (PC - 63 ≤ destination ≤ PC + 64). Parameter k
+   * is the offset from PC and is represented in two’s complement form.
+   * (Equivalent to instruction BRBS 4,k.)
    *
    * @param insn Instruction being executed
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRLT insn) {
-	    if (this.signFlag != UNKNOWN) {
-	        // The outcome is known.
-	        if (this.signFlag == TRUE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	        return null; // No fork created.
-	    } else {
-	        // The outcome is unknown. We have a choice point.
-	        // Fork the state.
-	        AbstractAvr fork = this.clone();
+    if (this.signFlag != UNKNOWN) {
+      // The outcome is known.
+      if (this.signFlag == TRUE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+      return null; // No fork created.
+    }
+    // The outcome is unknown. We have a choice point.
+    // Fork the state.
+    AbstractAvr fork = this.clone();
 
-	        // In the original state, concretize the signFlag as TRUE.
-	        this.signFlag = TRUE;
-	        this.programCounter = (this.programCounter + insn.k + 1);
+    // In the original state, concretize the signFlag as TRUE.
+    this.signFlag = TRUE;
+    this.programCounter = (this.programCounter + insn.k + 1);
 
-	        // In the forked state, concretize the signFlag as FALSE.
-	        fork.signFlag = FALSE;
-	        fork.programCounter = fork.programCounter + 1;
+    // In the forked state, concretize the signFlag as FALSE.
+    fork.signFlag = FALSE;
+    fork.programCounter = fork.programCounter + 1;
 
-	        // Return the forked state.
-	        return fork;
-	    }
-	}
-
+    // Return the forked state.
+    return fork;
+  }
 
   /**
    * Conditional relative branch. Tests the Negative Flag (N) and branches
    * relatively to PC if N is set. This instruction branches relatively to PC in
-   * either direction (PC - 63 ≤ destination ≤ PC + 64). Parameter k is the offset
-   * from PC and is represented in two’s complement form. (Equivalent to
+   * either direction (PC - 63 ≤ destination ≤ PC + 64). Parameter k is the
+   * offset from PC and is represented in two’s complement form. (Equivalent to
    * instruction BRBS 2,k.)
    *
    * @param insn Instruction being executed
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRMI insn) {
-	    if (this.negativeFlag != UNKNOWN) {
-	        // The outcome is known.
-	        if (this.negativeFlag == TRUE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	        return null; // No fork created.
-	    } else {
-	        // The outcome is unknown. We have a choice point.
-	        // Fork the state.
-	        AbstractAvr fork = this.clone();
+    if (this.negativeFlag != UNKNOWN) {
+      // The outcome is known.
+      if (this.negativeFlag == TRUE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+      return null; // No fork created.
+    }
+    // The outcome is unknown. We have a choice point.
+    // Fork the state.
+    AbstractAvr fork = this.clone();
 
-	        // In the original state, concretize the negativeFlag as TRUE.
-	        this.negativeFlag = TRUE;
-	        this.programCounter = (this.programCounter + insn.k + 1);
+    // In the original state, concretize the negativeFlag as TRUE.
+    this.negativeFlag = TRUE;
+    this.programCounter = (this.programCounter + insn.k + 1);
 
-	        // In the forked state, concretize the negativeFlag as FALSE.
-	        fork.negativeFlag = FALSE;
-	        fork.programCounter = fork.programCounter + 1;
+    // In the forked state, concretize the negativeFlag as FALSE.
+    fork.negativeFlag = FALSE;
+    fork.programCounter = fork.programCounter + 1;
 
-	        // Return the forked state.
-	        return fork;
-	    }
-	}
-
+    // Return the forked state.
+    return fork;
+  }
 
   /**
    * Conditional relative branch. Tests the Zero Flag (Z) and branches relatively
@@ -1161,40 +1149,38 @@ public class AbstractAvr implements Cloneable {
    * of the instructions CP, CPI, SUB, or SUBI, the branch will occur if and only
    * if, the unsigned or signed binary number represented in rd was not equal to
    * the unsigned or signed binary number represented in rr. This instruction
-   * branches relatively to PC in either direction (PC - 63 ≤ destination ≤ PC +
-   * 64). Parameter k is the offset from PC and is represented in two’s complement
-   * form. (Equivalent to instruction BRBC 1,k.)
+   * branches relatively to PC in either direction (PC - 63 ≤ destination ≤ PC
+   * + 64). Parameter k is the offset from PC and is represented in two’s
+   * complement form. (Equivalent to instruction BRBC 1,k.)
    *
    * @param insn Instruction being executed
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRNE insn) {
-	    if (this.zeroFlag != UNKNOWN) {
-	        // The outcome is known.
-	        if (this.zeroFlag == FALSE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	        return null; // No fork created.
-	    } else {
-	        // The outcome is unknown. We have a choice point.
-	        // Fork the state.
-	        AbstractAvr fork = this.clone();
+    if (this.zeroFlag != UNKNOWN) {
+      // The outcome is known.
+      if (this.zeroFlag == FALSE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+      return null; // No fork created.
+    }
+    // The outcome is unknown. We have a choice point.
+    // Fork the state.
+    AbstractAvr fork = this.clone();
 
-	        // In the original state, concretize the zeroFlag as FALSE.
-	        this.zeroFlag = FALSE;
-	        this.programCounter = (this.programCounter + insn.k + 1);
+    // In the original state, concretize the zeroFlag as FALSE.
+    this.zeroFlag = FALSE;
+    this.programCounter = (this.programCounter + insn.k + 1);
 
-	        // In the forked state, concretize the zeroFlag as TRUE.
-	        fork.zeroFlag = TRUE;
-	        fork.programCounter = fork.programCounter + 1;
+    // In the forked state, concretize the zeroFlag as TRUE.
+    fork.zeroFlag = TRUE;
+    fork.programCounter = fork.programCounter + 1;
 
-	        // Return the forked state.
-	        return fork;
-	    }
-	}
-
+    // Return the forked state.
+    return fork;
+  }
 
   /**
    * Conditional relative branch. Tests the Negative Flag (N) and branches
@@ -1207,32 +1193,30 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRPL insn) {
-	    if (this.negativeFlag != UNKNOWN) {
-	        // The outcome is known.
-	        if (this.negativeFlag == FALSE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	        return null; // No fork created.
-	    } else {
-	        // The outcome is unknown. We have a choice point.
-	        // Fork the state.
-	        AbstractAvr fork = this.clone();
+    if (this.negativeFlag != UNKNOWN) {
+      // The outcome is known.
+      if (this.negativeFlag == FALSE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+      return null; // No fork created.
+    }
+    // The outcome is unknown. We have a choice point.
+    // Fork the state.
+    AbstractAvr fork = this.clone();
 
-	        // In the original state, concretize the negativeFlag as FALSE.
-	        this.negativeFlag = FALSE;
-	        this.programCounter = (this.programCounter + insn.k + 1);
+    // In the original state, concretize the negativeFlag as FALSE.
+    this.negativeFlag = FALSE;
+    this.programCounter = (this.programCounter + insn.k + 1);
 
-	        // In the forked state, concretize the negativeFlag as TRUE.
-	        fork.negativeFlag = TRUE;
-	        fork.programCounter = fork.programCounter + 1;
+    // In the forked state, concretize the negativeFlag as TRUE.
+    fork.negativeFlag = TRUE;
+    fork.programCounter = fork.programCounter + 1;
 
-	        // Return the forked state.
-	        return fork;
-	    }
-	}
-
+    // Return the forked state.
+    return fork;
+  }
 
   /**
    * Conditional relative branch. Tests the Carry Flag (C) and branches relatively
@@ -1241,114 +1225,109 @@ public class AbstractAvr implements Cloneable {
    * occur if and only if, the unsigned binary number represented in rd was
    * greater than or equal to the unsigned binary number represented in rr. This
    * instruction branches relatively to PC in either direction (PC - 63 ≤
-   * destination ≤ PC + 64). Parameter k is the offset from PC and is represented
-   * in two’s complement form. (Equivalent to instruction BRBC 0,k.)
+   * destination ≤ PC + 64). Parameter k is the offset from PC and is
+   * represented in two’s complement form. (Equivalent to instruction BRBC 0,k.)
    *
    * @param insn Instruction being executed
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRSH insn) {
-	    if (this.carryFlag != UNKNOWN) {
-	        // The outcome is known.
-	        if (this.carryFlag == FALSE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	        return null; // No fork created.
-	    } else {
-	        // The outcome is unknown. We have a choice point.
-	        // Fork the state.
-	        AbstractAvr fork = this.clone();
+    if (this.carryFlag != UNKNOWN) {
+      // The outcome is known.
+      if (this.carryFlag == FALSE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+      return null; // No fork created.
+    }
+    // The outcome is unknown. We have a choice point.
+    // Fork the state.
+    AbstractAvr fork = this.clone();
 
-	        // In the original state, concretize the carryFlag as FALSE.
-	        this.carryFlag = FALSE;
-	        this.programCounter = (this.programCounter + insn.k + 1);
+    // In the original state, concretize the carryFlag as FALSE.
+    this.carryFlag = FALSE;
+    this.programCounter = (this.programCounter + insn.k + 1);
 
-	        // In the forked state, concretize the carryFlag as TRUE.
-	        fork.carryFlag = TRUE;
-	        fork.programCounter = fork.programCounter + 1;
+    // In the forked state, concretize the carryFlag as TRUE.
+    fork.carryFlag = TRUE;
+    fork.programCounter = fork.programCounter + 1;
 
-	        // Return the forked state.
-	        return fork;
-	    }
-	}
-
+    // Return the forked state.
+    return fork;
+  }
 
   /**
    * Conditional relative branch. Tests the T Flag and branches relatively to PC
    * if T is cleared. This instruction branches relatively to PC in either
-   * direction (PC - 63 ≤ destination ≤ PC + 64). Parameter k is the offset from
-   * PC and is represented in two’s complement form. (Equivalent to instruction
-   * BRBC 6,k.)
+   * direction (PC - 63 ≤ destination ≤ PC + 64). Parameter k is the offset
+   * from PC and is represented in two’s complement form. (Equivalent to
+   * instruction BRBC 6,k.)
    *
    * @param insn Instruction being executed
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRTC insn) {
-	    if (this.bitcopyFlag != UNKNOWN) {
-	        // The outcome is known.
-	        if (this.bitcopyFlag == FALSE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	        return null; // No fork created.
-	    } else {
-	        // The outcome is unknown. We have a choice point.
-	        // Fork the state.
-	        AbstractAvr fork = this.clone();
+    if (this.bitcopyFlag != UNKNOWN) {
+      // The outcome is known.
+      if (this.bitcopyFlag == FALSE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+      return null; // No fork created.
+    }
+    // The outcome is unknown. We have a choice point.
+    // Fork the state.
+    AbstractAvr fork = this.clone();
 
-	        // In the original state, concretize the bitcopyFlag as FALSE.
-	        this.bitcopyFlag = FALSE;
-	        this.programCounter = (this.programCounter + insn.k + 1);
+    // In the original state, concretize the bitcopyFlag as FALSE.
+    this.bitcopyFlag = FALSE;
+    this.programCounter = (this.programCounter + insn.k + 1);
 
-	        // In the forked state, concretize the bitcopyFlag as TRUE.
-	        fork.bitcopyFlag = TRUE;
-	        fork.programCounter = fork.programCounter + 1;
+    // In the forked state, concretize the bitcopyFlag as TRUE.
+    fork.bitcopyFlag = TRUE;
+    fork.programCounter = fork.programCounter + 1;
 
-	        // Return the forked state.
-	        return fork;
-	    }
-	}
-
+    // Return the forked state.
+    return fork;
+  }
 
   /**
    * Conditional relative branch. Tests the T Flag and branches relatively to PC
    * if T is set. This instruction branches relatively to PC in either direction
-   * (PC - 63 ≤ destination ≤ PC + 64). Parameter k is the offset from PC and is
-   * represented in two’s complement form. (Equivalent to instruction BRBS 6,k.)
+   * (PC - 63 ≤ destination ≤ PC + 64). Parameter k is the offset from PC and
+   * is represented in two’s complement form. (Equivalent to instruction BRBS
+   * 6,k.)
    *
    * @param insn Instruction being executed
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRTS insn) {
-	    if (this.bitcopyFlag != UNKNOWN) {
-	        // The outcome is known.
-	        if (this.bitcopyFlag == TRUE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	        return null; // No fork created.
-	    } else {
-	        // The outcome is unknown. We have a choice point.
-	        // Fork the state.
-	        AbstractAvr fork = this.clone();
+    if (this.bitcopyFlag != UNKNOWN) {
+      // The outcome is known.
+      if (this.bitcopyFlag == TRUE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+      return null; // No fork created.
+    }
+    // The outcome is unknown. We have a choice point.
+    // Fork the state.
+    AbstractAvr fork = this.clone();
 
-	        // In the original state, concretize the bitcopyFlag as TRUE.
-	        this.bitcopyFlag = TRUE;
-	        this.programCounter = (this.programCounter + insn.k + 1);
+    // In the original state, concretize the bitcopyFlag as TRUE.
+    this.bitcopyFlag = TRUE;
+    this.programCounter = (this.programCounter + insn.k + 1);
 
-	        // In the forked state, concretize the bitcopyFlag as FALSE.
-	        fork.bitcopyFlag = FALSE;
-	        fork.programCounter = fork.programCounter + 1;
+    // In the forked state, concretize the bitcopyFlag as FALSE.
+    fork.bitcopyFlag = FALSE;
+    fork.programCounter = fork.programCounter + 1;
 
-	        // Return the forked state.
-	        return fork;
-	    }
-	}
-
+    // Return the forked state.
+    return fork;
+  }
 
   /**
    * Conditional relative branch. Tests the Overflow Flag (V) and branches
@@ -1361,70 +1340,66 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRVC insn) {
-	    if (this.overflowFlag != UNKNOWN) {
-	        // The outcome is known.
-	        if (this.overflowFlag == FALSE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	        return null; // No fork created.
-	    } else {
-	        // The outcome is unknown. We have a choice point.
-	        // Fork the state.
-	        AbstractAvr fork = this.clone();
+    if (this.overflowFlag != UNKNOWN) {
+      // The outcome is known.
+      if (this.overflowFlag == FALSE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+      return null; // No fork created.
+    }
+    // The outcome is unknown. We have a choice point.
+    // Fork the state.
+    AbstractAvr fork = this.clone();
 
-	        // In the original state, concretize the overflowFlag as FALSE.
-	        this.overflowFlag = FALSE;
-	        this.programCounter = (this.programCounter + insn.k + 1);
+    // In the original state, concretize the overflowFlag as FALSE.
+    this.overflowFlag = FALSE;
+    this.programCounter = (this.programCounter + insn.k + 1);
 
-	        // In the forked state, concretize the overflowFlag as TRUE.
-	        fork.overflowFlag = TRUE;
-	        fork.programCounter = fork.programCounter + 1;
+    // In the forked state, concretize the overflowFlag as TRUE.
+    fork.overflowFlag = TRUE;
+    fork.programCounter = fork.programCounter + 1;
 
-	        // Return the forked state.
-	        return fork;
-	    }
-	}
-
+    // Return the forked state.
+    return fork;
+  }
 
   /**
    * Conditional relative branch. Tests the Overflow Flag (V) and branches
    * relatively to PC if V is set. This instruction branches relatively to PC in
-   * either direction (PC - 63 ≤ destination ≤ PC + 64). Parameter k is the offset
-   * from PC and is represented in two’s complement form. (Equivalent to
+   * either direction (PC - 63 ≤ destination ≤ PC + 64). Parameter k is the
+   * offset from PC and is represented in two’s complement form. (Equivalent to
    * instruction BRBS 3,k.)
    *
    * @param insn Instruction being executed
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.BRVS insn) {
-	    if (this.overflowFlag != UNKNOWN) {
-	        // The outcome is known.
-	        if (this.overflowFlag == TRUE) {
-	            this.programCounter = (this.programCounter + insn.k + 1);
-	        } else {
-	            this.programCounter = this.programCounter + 1;
-	        }
-	        return null; // No fork created.
-	    } else {
-	        // The outcome is unknown. We have a choice point.
-	        // Fork the state.
-	        AbstractAvr fork = this.clone();
+    if (this.overflowFlag != UNKNOWN) {
+      // The outcome is known.
+      if (this.overflowFlag == TRUE) {
+        this.programCounter = (this.programCounter + insn.k + 1);
+      } else {
+        this.programCounter = this.programCounter + 1;
+      }
+      return null; // No fork created.
+    }
+    // The outcome is unknown. We have a choice point.
+    // Fork the state.
+    AbstractAvr fork = this.clone();
 
-	        // In the original state, concretize the overflowFlag as TRUE.
-	        this.overflowFlag = TRUE;
-	        this.programCounter = (this.programCounter + insn.k + 1);
+    // In the original state, concretize the overflowFlag as TRUE.
+    this.overflowFlag = TRUE;
+    this.programCounter = (this.programCounter + insn.k + 1);
 
-	        // In the forked state, concretize the overflowFlag as FALSE.
-	        fork.overflowFlag = FALSE;
-	        fork.programCounter = fork.programCounter + 1;
+    // In the forked state, concretize the overflowFlag as FALSE.
+    fork.overflowFlag = FALSE;
+    fork.programCounter = fork.programCounter + 1;
 
-	        // Return the forked state.
-	        return fork;
-	    }
-	}
-
+    // Return the forked state.
+    return fork;
+  }
 
   /**
    * Sets a single Flag or bit in SREG.
@@ -1705,43 +1680,6 @@ public class AbstractAvr implements Cloneable {
     return null;
   }
 
-//  /**
-//   * This instruction performs a compare between two registers rd and rr, and
-//   * skips the next instruction if rd = rr.
-//   *
-//   * @param insn Instruction being executed
-//   * @return Forked AVR state or <code>null</code> (if no fork).
-//   */
-//  private @Nullable AbstractAvr execute(AvrInstruction.CPSE insn) {
-//	  this.programCounter = this.programCounter + 1;
-//	  Byte rd = this.data.read(insn.Rd);
-//	  Byte rr = this.data.read(insn.Rr);
-//	  Bit b = rd.eq(rr);
-//	  AbstractAvr fork = null;
-//	  AvrInstruction following = decode(this.programCounter);
-//	  int pc = (this.programCounter + following.getWidth());
-//	  
-//	  // Identify if the outcome is known or unknown.
-//	  if(b == UNKNOWN) {
-//	    // In the case of an unknown outcome, fork the current state.
-//	    fork = this.clone();
-//
-//	    // In the fork, we assume rd and rr are equal and the next instruction is skipped.
-//	    fork.programCounter = pc;
-//
-//	    // In the original state, we assume rd and rr are not equal and the next instruction is not skipped.
-//	    this.programCounter = this.programCounter + 1;
-//	  } else {
-//	    // If outcome is known, execute as normal
-//	    if (b == TRUE) {
-//	      this.programCounter = pc;
-//	    }
-//	  }
-//	  
-//	  // Execute both forks as we have known values in both cases.
-//	  return fork;
-//	}
-  
   /**
    * This instruction performs a compare between two registers rd and rr, and
    * skips the next instruction if rd = rr.
@@ -1750,24 +1688,23 @@ public class AbstractAvr implements Cloneable {
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
   private @Nullable AbstractAvr execute(AvrInstruction.CPSE insn) {
-	    this.programCounter = this.programCounter + 1;
-	    Byte rd = this.data.read(insn.Rd);
-	    Byte rr = this.data.read(insn.Rr);
-	    Bit b = rd.eq(rr);
-	    AbstractAvr fork = null;
-	    if (b == TRUE) {
-	      AvrInstruction following = decode(this.programCounter);
-	      this.programCounter = (this.programCounter + following.getWidth());
-	    }
-	    if (b == UNKNOWN) {
-	      fork = this.clone();
-	      AvrInstruction following = decode(this.programCounter);
-	      fork.programCounter = (this.programCounter + following.getWidth());
-	    }
+    this.programCounter = this.programCounter + 1;
+    Byte rd = this.data.read(insn.Rd);
+    Byte rr = this.data.read(insn.Rr);
+    Bit b = rd.eq(rr);
+    AbstractAvr fork = null;
+    if (b == TRUE) {
+      AvrInstruction following = decode(this.programCounter);
+      this.programCounter = (this.programCounter + following.getWidth());
+    }
+    if (b == UNKNOWN) {
+      fork = this.clone();
+      AvrInstruction following = decode(this.programCounter);
+      fork.programCounter = (this.programCounter + following.getWidth());
+    }
 
-	    return fork;
-	}
-
+    return fork;
+  }
 
   /**
    * Subtracts one from the contents of register rd and places the result in the
@@ -2291,8 +2228,8 @@ public class AbstractAvr implements Cloneable {
   }
 
   /**
-   * replaces the contents of register rd with its two’s complement; the value $80
-   * is left unchanged.
+   * replaces the contents of register rd with its two’s complement; the value
+   * $80 is left unchanged.
    *
    * @param insn Instruction being executed
    * @return Forked AVR state or <code>null</code> (if no fork).
@@ -2608,35 +2545,35 @@ public class AbstractAvr implements Cloneable {
    * @param insn Instruction being executed
    * @return Forked AVR state or <code>null</code> (if no fork).
    */
-private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
-  this.programCounter = this.programCounter + 1;
-  Byte io = this.data.read(insn.A + 32);
-  Bit iob = io.get(insn.b);
-  AbstractAvr fork = null;
-  AvrInstruction following = decode(this.programCounter);
-  int pc = this.programCounter + following.getWidth();
+  private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
+    this.programCounter = this.programCounter + 1;
+    Byte io = this.data.read(insn.A + 32);
+    Bit iob = io.get(insn.b);
+    AbstractAvr fork = null;
+    AvrInstruction following = decode(this.programCounter);
+    int pc = this.programCounter + following.getWidth();
 
-  // Identify if the outcome is known or unknown.
-  if(iob == UNKNOWN) {
-    // In the case of an unknown outcome, fork the current state.
-    fork = this.clone();
+    // Identify if the outcome is known or unknown.
+    if (iob == UNKNOWN) {
+      // In the case of an unknown outcome, fork the current state.
+      fork = this.clone();
 
-    // In the fork, we assume the bit is FALSE and the next instruction is skipped.
-    fork.data.write(insn.A + 32, io.set(insn.b, TRUE));
-    fork.programCounter = pc;
+      // In the fork, we assume the bit is FALSE and the next instruction is skipped.
+      fork.data.write(insn.A + 32, io.set(insn.b, TRUE));
+      fork.programCounter = pc;
 
-    // In the original state, we assume the bit is TRUE and the next instruction is not skipped.
-    this.data.write(insn.A + 32, io.set(insn.b, FALSE));
-  } else {
-    // If outcome is known, execute as normal
-    if (iob == FALSE) {
-      this.programCounter = pc;
+      // In the original state, we assume the bit is TRUE and the next instruction is
+      // not skipped.
+      this.data.write(insn.A + 32, io.set(insn.b, FALSE));
+    } else {
+      // If outcome is known, execute as normal
+      if (iob == FALSE) {
+        this.programCounter = pc;
+      }
     }
+    // Execute both forks as we have known values in both cases.
+    return fork;
   }
-  // Execute both forks as we have known values in both cases.
-  return fork;
-}
-
 
   /**
    * This instruction tests a single bit in an I/O register and skips the next
@@ -2654,20 +2591,20 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
     AvrInstruction following = decode(this.programCounter);
     int pc = this.programCounter + following.getWidth();
     //
-    
-    if(iob == UNKNOWN) {
-    	fork = this.clone();
-    	fork.data.write(insn.A + 32, io.set(insn.b, TRUE));
-    	fork.programCounter = this.getProgramCounter();
-    	
-    	this.data.write(insn.A + 32, io.set(insn.b, FALSE));
-        this.programCounter = this.programCounter + following.getWidth();
+
+    if (iob == UNKNOWN) {
+      fork = this.clone();
+      fork.data.write(insn.A + 32, io.set(insn.b, TRUE));
+      fork.programCounter = this.getProgramCounter();
+
+      this.data.write(insn.A + 32, io.set(insn.b, FALSE));
+      this.programCounter = this.programCounter + following.getWidth();
 
     } else {
-        // If outcome is known, execute as normal
-	    if (iob == TRUE) {
-	      this.programCounter = pc;
-	    }
+      // If outcome is known, execute as normal
+      if (iob == TRUE) {
+        this.programCounter = pc;
+      }
     }
     // Execute both forks as we have known values in both cases.
     return fork;
@@ -2701,19 +2638,6 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
     return null;
   }
 
-//  /**
-//   * Sets specified bits in register rd. Performs the logical ORI between the
-//   * contents of register rd and a constant mask K, and places the result in the
-//   * destination register rd.
-//   *
-//   * @param insn Instruction being executed
-//   * @return Forked AVR state or <code>null</code> (if no fork).
-//   */
-//  private @Nullable AbstractAvr execute(AvrInstruction.SBR insn) {
-//    // TODO
-//    throw new IllegalArgumentException("IMPLEMENT ME");
-//  }
-  
   /**
    * Sets specified bits in register rd. Performs the logical ORI between the
    * contents of register rd and a constant mask K, and places the result in the
@@ -2739,7 +2663,6 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
     return null;
   }
 
-
   /**
    * This instruction tests a single bit in a register and skips the next
    * instruction if the bit is cleared.
@@ -2764,7 +2687,8 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
       fork.data.write(insn.Rd, rd.set(insn.b, TRUE));
       fork.programCounter = pc;
 
-      // In the original state, we assume the bit is FALSE and the next instruction is not skipped.
+      // In the original state, we assume the bit is FALSE and the next instruction is
+      // not skipped.
       this.data.write(insn.Rd, rd.set(insn.b, FALSE));
     } else {
       // If outcome is known, execute as normal
@@ -2802,7 +2726,8 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
       fork.data.write(insn.Rd, rd.set(insn.b, TRUE));
       fork.programCounter = pc;
 
-      // In the original state, we assume the bit is FALSE and the next instruction is not skipped.
+      // In the original state, we assume the bit is FALSE and the next instruction is
+      // not skipped.
       this.data.write(insn.Rd, rd.set(insn.b, FALSE));
     } else {
       // If outcome is known, execute as normal
@@ -2814,7 +2739,6 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
     // Execute both forks as we have known values in both cases.
     return fork;
   }
-
 
   /**
    * Sets the Carry Flag (C) in SREG (Status register).
@@ -3461,8 +3385,8 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
   private void checkAddressKnown(Word address) {
     if (address.isUnknown()) {
       String pcHex = Integer.toHexString(this.programCounter);
-      throw new IllegalArgumentException(
-          "Unknown indirect address (PC=0x" + pcHex + RBRACE); //$NON-NLS-1$
+      throw new 
+      IllegalArgumentException("Unknown indirect address (PC=0x" + pcHex + RBRACE); //$NON-NLS-1$
     }
   }
 
@@ -3476,18 +3400,18 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
    * @return Logical AND of bits.
    */
   private static Bit and(Bit... bits) {
-	  boolean hasUnknown = false;
-	    for (int i = 0; i != bits.length; ++i) {
-	        Bit ith = bits[i];
-		    if (ith == FALSE) {
-		      return FALSE;
-		    }
-		    if (ith == UNKNOWN) {
-		      hasUnknown = true;
-		    }
-	    }
-	  return hasUnknown ? UNKNOWN : TRUE;
-	}
+    boolean hasUnknown = false;
+    for (int i = 0; i != bits.length; ++i) {
+      Bit ith = bits[i];
+      if (ith == FALSE) {
+        return FALSE;
+      }
+      if (ith == UNKNOWN) {
+        hasUnknown = true;
+      }
+    }
+    return hasUnknown ? UNKNOWN : TRUE;
+  }
 
   /**
    * Logical OR of one or more bits. Since each bit may be unknown, the outcome
@@ -3499,18 +3423,18 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
    * @return Logical OR of bits.
    */
   private static Bit or(Bit... bits) {
-	  boolean hasUnknown = false;
-	    for (int i = 0; i != bits.length; ++i) {
-	        Bit ith = bits[i];
-	        if (ith == TRUE) {
-	          return TRUE;
-	        }
-		    if (ith == UNKNOWN) {
-		      hasUnknown = true;
-		    }
-	    }
-	  return hasUnknown ? UNKNOWN : FALSE;
-	}
+    boolean hasUnknown = false;
+    for (int i = 0; i != bits.length; ++i) {
+      Bit ith = bits[i];
+      if (ith == TRUE) {
+        return TRUE;
+      }
+      if (ith == UNKNOWN) {
+        hasUnknown = true;
+      }
+    }
+    return hasUnknown ? UNKNOWN : FALSE;
+  }
 
   /**
    * Logical XOR of a single bit. Since the argument bits may be unknown, the
@@ -3522,7 +3446,9 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
    * @return XOR of bits.
    */
   private static Bit xor(Bit lhs, Bit rhs) {
-	if(lhs == UNKNOWN || rhs == UNKNOWN) return UNKNOWN;
+    if (lhs == UNKNOWN || rhs == UNKNOWN) {
+      return UNKNOWN;
+    }
     if (lhs == rhs) {
       return FALSE;
     }
@@ -3538,13 +3464,14 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
    * @return False if True (and vice versa), otherwise unknown.
    */
   private static Bit not(Bit b) {
-	if(b == UNKNOWN) return UNKNOWN;
+    if (b == UNKNOWN) {
+      return UNKNOWN;
+    }
     if (b == FALSE) {
       return TRUE;
     }
     return FALSE;
   }
-
 
   /**
    * Left angle brace.
@@ -3577,9 +3504,9 @@ private @Nullable AbstractAvr execute(AvrInstruction.SBIC insn) {
   /**
    * Debug beginning.
    */
-  private static final String DBG_BEG = "PC=0x";  //$NON-NLS-1$
+  private static final String DBG_BEG = "PC=0x"; //$NON-NLS-1$
   /**
    * Debug end.
    */
-  private static final String DBG_MID = ", SREG=";   //$NON-NLS-1$
+  private static final String DBG_MID = ", SREG="; //$NON-NLS-1$
 }
